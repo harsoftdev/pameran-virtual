@@ -8,12 +8,15 @@
     "three": "^0.171.0"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "vite": "^6.0.7"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "\"Harsoft\"",

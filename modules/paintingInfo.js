@@ -1,19 +1,20 @@
-// munculkan painting info di DOM
+// Display painting info in the DOM
 export const displayPaintingInfo = (info) => {
-    const infoElement = document.getElementById('painting-info');
+    const infoElement = document.getElementById('painting-info'); // Get the reference
 
-    // Atur kontent HTML di dalam elemen info 
-    infoElement.innerHTML =`
-        <h3>${info.title}</h3>
-        <p>Artist: ${info.artist}</p>
-        <p>Description: ${info.description}</h3>
-        <p>Year: ${info.year}</p>
+    // Set the html content inside info element
+    infoElement.innerHTML = `
+      <h3>${info.title}</h3>
+      <p>Artist: ${info.artist}</p>
+      <p>Description: ${info.description}</p>
+      <p>Year: ${info.year}</p>
     `;
-    infoElement.classList.add('show'); // tambahkan class 'show'
+    infoElement.classList.add('show'); // Add the 'show' class
 };
 
-// sembunyikan painting info di DOM
+// Hide painting info in the DOM
 export const hidePaintingInfo = () => {
-    const infoElement = document.getElementById('painting-info');
-    infoElement.classList.remove('show'); // hapus class 'show'
+    const infoElement = document.getElementById('painting-info'); // Get the reference
+    infoElement.classList.remove('show'); // Remove the 'show' class
 };
+

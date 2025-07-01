@@ -2,42 +2,59 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Pameran Virtual - DISARPUS Kab. Bekasi</title>
+	<meta charset="utf-8" />
 
-	<link rel="stylesheet" href="css/style.css">
+	<title>3D Art Gallery</title>
+
+	<link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
-	<div class="background-menu">
-		<div id="menu">
-			<div id="img_container">
-				<img src="img/welcome.png" alt="Welcome">
-			</div>
-
+	<div id="menu">
+		<div id="img_container">
+			<div id="starry_night_bg"></div>
+		</div>
+		<div id="content_container">
 			<div id="content">
-				<h1>Pameran Virtual</h1>
-				<div>
-					<p>Selamat datang di Pameran Virtual DISARPUS Kab. Bekasi </p>
+				<div class="title">
+					<h1>Pameran Virtual Arsip</h1>
 				</div>
-
-				<div>
-					<b>Panduan:</b>
-					<p>Gunakan tombol panah atau W/A/S/D untuk lihat sekeliling</p>
-					<p>Lihat sekeliling dengan mouse</p>
+				<div class="title-info">
+					<p>Selamat datang di pengalaman Pameran Virtual Arsip yang imersif.</p>
+					<p>
+						Jelajahi lorong-lorong pameran virtual, temukan berbagai koleksi arsip penting,
+						dan pelajari sejarah serta informasi yang terkandung di dalamnya.
+					</p>
+					<p>
+						Dikembangkan oleh Dinas Arsip dan Perpustakaan Kabupaten Bekasi dengan semangat
+						menjaga memori kolektif melalui teknologi.
+					</p>
 				</div>
 
 				<div id="play_button">
-					<p>Masuk ke Pameran</p>
+					<p>JELAJAHI ARSIP</p>
 				</div>
 			</div>
 		</div>
 	</div>
-	
+
+	<div id="info-panel">
+		<div id="info-header">
+			<h3>Kendali</h3>
+			<button id="toggle-info">Sembunyikan</button>
+		</div>
+		<div id="info-content">
+			<p><b>W/A/S/D:</b> Bergerak</p>
+			<p><b>Mouse:</b> Melihat sekitar</p>
+			<p><b>Spasi:</b> Aktif/nonaktif pointer lock</p>
+			<p><b>Enter:</b> Mulai penjelajahan</p>
+			<p><b>Esc:</b> Berhenti penjelajahan</p>
+		</div>
+	</div>
+
 	<div id="painting-info"></div>
-	<script type="module" src="js/main.js"></script>
+
+	<script type="module" src="/main.js"></script>
 </body>
 
 </html>

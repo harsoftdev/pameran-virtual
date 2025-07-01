@@ -1,91 +1,49 @@
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/examples/jsm/Addons.js';
+import * as THREE from "three";
+import { PointerLockControls } from "three-stdlib";
 
-export const scene = new THREE.scene();
+export const scene = new THREE.Scene(); // create a scene
 let camera;
 let controls;
 let renderer;
 
-export const setpScene = () => {
-    /**
-     * PerspectiveCamera adalah jenis kamera yang meniru cara pandang manusia terhadap objek. Kamera ini memerlukan
-     * 4 parameter: field of view (FOV), rasio aspek, near clipping plane, dan far clipping plane.Field of view 
-     * adalah seberapa luas pemandangan yang dapat terlihat di layar pada suatu waktu. Rasio aspek adalah
-     * perbandingan antara lebar dan tinggi elemen (dalam hal ini, lebar dan tinggi layar). Kamera tidak
-     * akan merender objek yang lebih dekat dari near clipping plane atau lebih jauh dari far clipping
-     * plane. Objek yang berada pada clipping plane tidak akan dirender.
-     */
+export const setupScene = () => {
+    // PerspectiveCamera is a type of camera that mimics the way the human eye sees things. It takes 4 parameters: field of view, aspect ratio, near clipping plane, and far clipping plane. The field of view is the extent of the scene that is seen on the display at any given moment. The aspect ratio should be the width of the element divided by the height (in this case, the screen width and height). The camera will not render objects that are closer to the camera than the near clipping plane or further away than the far clipping plane. Objects that are exactly on the clipping plane will not be rendered.
     camera = new THREE.PerspectiveCamera(
         60, // fov = field of view
-        window.innerWidth / window.innerHeight, // aspect ration
+        window.innerWidth / window.innerHeight, // aspect ratio
         0.1, // near clipping plane
         1000 // far clipping plane
     );
-    scene.add(camera); // menambahkan kamera ke scene
-    camera.position.set(0, 2, 15); // pindahkan kamera sejauh 3 unit di sumbu Y
+    scene.add(camera); // add the camera to the scene
+    camera.position.set(0, 2, 15); // move the camera up 3 units in the Y axis
 
-    /**
-     * Buat WebGLRenderer dan atur properti antialias menjadi true untuk mengaktifkan antialias yang mebuat akan
-     * membuat tepi objek yang dirender menjadi lebih halus.
-     */
-    renderer = new THREE.WebGLRenderer({ antialias: false });
-    /**
-     * Atur ukuran renderer sesuai dengan lebar dan tinggi jendela (browser window) menggunakan innterWidth dan
-     * innerHeight.
-     */
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    /**
-     * Atur warna latar belakang renderer menjadi putih.
-     */
-    renderer.setClearColor(0xffffff, 1);
-    /**
-     * Tambahkan renderer ke dalam body dokumen (elemen <canvas> yang digunakan oleh renderer akan ditambahkan
-     * ke dalam body).
-     */
-    document.body.appendChild(renderer.domElement);
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
 
-    renderer.shadowMap.enabled = true; // Aktifkan shadow mapping
-    /**
-     * renderer.shadowMap.type adalah Property yang mendifinisikan jenis shadow map yang digunakan oleh renderer. 
-     * THREE.PCFSoftShadowMap adalah salah satu jenis shadow map yang tersedia, yang berarti Percentage-Closer
-     * Fitering Show Shadow Map. Jenis shadow map ini menggunakan algoritma untuk memperhalus tepi-tepi
-     * bayangan dan membuatnya terlihat lebih lembut.
-     */
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 7.5);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight);
 
-    /**
-     * Buat objek PointerLockControls yang mengambil kamera dan domElement dari renderer sebagai argumen.
-     * PointerLockControls adalah kelas yang memungkinkan kamera dikendalikan menggunakan mouse dan
-     * keyboard. 
-     */
-    controls = new PointerLockControls(camera, renderer.domElement);
-    scene.add(PointerLockControls.getObject()); // tambahkan PointerLockControls ke dalam scene
+    renderer = new THREE.WebGLRenderer({ antialias: false }); // create a WebGLRenderer and set its antialias property to true to enable antialiasing which smooths out the edges of what is rendered
+    renderer.setSize(window.innerWidth, window.innerHeight); // set the size of the renderer to the inner width and height of the window (the browser window)
+    renderer.setClearColor(0xffffff, 1); // set the background color of the renderer to white
+    document.body.appendChild(renderer.domElement); // append the renderer to the body of the document (the <canvas> element that the renderer uses will be added to the body)
 
-    /**
-     * Tambahkan eventListener ke window yang memanggil fungsi onWindowResize saat jendela diubah ukurannya.
-     * Fungsinya adalah untuk memperbarui rasio aspek kamera dan ukuran renderer. Parameter ketiga diatur
-     * ke false untuk menunjukkan bahwa event listener harus dipicu di fase bubbling, bukan di fase
-     * capturing. Fase bubbling adalah saat event 'mengalir' dari element induk ke elemen target.
-     * Nilai defaultnya adalah false, jadi kita tidak perlu menyertakannya, tetapi saya
-     * menyertakannya untuk kejelasan. Fase capturing jarang digunakan, jadi Anda
-     * bisa mengabaikannya untuk saat ini.
-     */
-    window.addEventListener("resize", onWindowResize, false);
+    renderer.shadowMap.enabled = true; // enable shadow mapping
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // `renderer.shadowMap.type` is a property that defines the type of shadow map used by the renderer. THREE.PCFSoftShadowMap is one of the available shadow map types and stands for Percentage-Closer Filtering Soft Shadow Map. This type of shadow map uses an algorithm to smooth the edges of shadows and make them appear softer
+
+    controls = new PointerLockControls(camera, renderer.domElement); // create a PointerLockControls object that takes the camera and the renderer's domElement as arguments. PointerLockControls is a class that allows the camera to be controlled by the mouse and keyboard.
+    scene.add(controls.getObject()); // add the PointerLockControls object to the scene
+
+    window.addEventListener("resize", onWindowResize, false); // add an event listener to the window that calls the onWindowResize function when the window is resized. Its work is to update the camera's aspect ratio and the renderer's size. The third parameter is set to false to indicate that the event listener should be triggered in the bubbling phase instead of the capturing phase. The bubbling phase is when the event bubbles up from the target element to the parent elements. The capturing phase is when the event trickles down from the parent elements to the target element. The default value is false, so we don't need to include it, but I included it for clarity. The capturing phase is rarely used, so you can ignore it for now. You can read more about the capturing and bubbling phases here: https://javascript.info/bubbling-and-capturing
 
     function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight; // ubah rasio aspek kamera
-        /**
-         * Perbarui matriks proyeksi kamera. Matriks proyeksi kamera digunakan untuk menentukan bagaimana titik 3D
-         * dipetakan ke ruang 2D pada layar. Matriks ini digunakan untuk menghitung frustum kamera, yang merupakan
-         * piramida terpotong yang mewakili field of view (FOV) kamera. Segala sesuatu yang berada diluar frustum
-         * tidak akan dirender. Matriks proyeksi ini dihitung ulang setiap kali jendela diubah ukurannya.
-         */
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight); // ubah ukuran renderer
+        camera.aspect = window.innerWidth / window.innerHeight; // update the camera's aspect ratio
+        camera.updateProjectionMatrix(); // update the camera's projection matrix. The projection matrix is used to determine how 3D points are mapped to the 2D space of the screen. It is used to calculate the frustum of the camera which is a truncated pyramid that represents the camera's field of view. Anything outside the frustum is not rendered. The projection matrix is used to calculate the frustum every time the window is resized.
+        renderer.setSize(window.innerWidth, window.innerHeight); // update the size of the renderer
     }
 
-    /**
-     * Kembalikan kamera, controls, dan renderer agar bisa digunakan di modul lain.
-     */
-    return {camera, controls, renderer};
+    return { camera, controls, renderer }; // return the camera, controls, and renderer so that they can be used in other modules
 };

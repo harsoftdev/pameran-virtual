@@ -19,7 +19,7 @@ const walls = createWalls(scene, textureLoader);
 const floor = setupFloor(scene);
 const ceiling = createCeiling(scene, textureLoader);
 const door = createDoor(scene, textureLoader);
-const paintings = createPaintings(scene, textureLoader);
+const paintings = await createPaintings(scene, textureLoader);
 
 createBoundingBoxes(walls);
 createBoundingBoxes(paintings);
@@ -33,3 +33,16 @@ setupEventListeners(controls);
 clickHandling(renderer, camera, paintings);
 
 setupRendering(scene, camera, renderer, paintings, controls, walls);
+
+document.addEventListener('pointerlockchange', () => {
+    const infoElement = document.getElementById('painting-info');
+    if (document.pointerLockElement) {
+        infoElement.classList.add('locked');
+    } else {
+        infoElement.classList.remove('locked');
+    }
+});
+
+const loaderDiv = document.getElementById('loader');
+loaderDiv.style.opacity = 0;
+setTimeout(() => loaderDiv.style.display = 'none', 500);

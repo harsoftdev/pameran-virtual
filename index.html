@@ -4,52 +4,77 @@
 <head>
 	<meta charset="utf-8" />
 
-	<title>3D Art Gallery</title>
+	<title>Pameran Virtual - Dinas Arsip dan Perpustakaan Kabupaten Bekasi</title>
 
 	<link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
-	<div id="menu">
-		<div id="img_container">
-			<div id="starry_night_bg"></div>
-		</div>
-		<div id="content_container">
-			<div id="content">
-				<div class="title">
-					<h1>Pameran Virtual Arsip</h1>
-				</div>
-				<div class="title-info">
-					<p>Selamat datang di pengalaman Pameran Virtual Arsip yang imersif.</p>
-					<p>
-						Jelajahi lorong-lorong pameran virtual, temukan berbagai koleksi arsip penting,
-						dan pelajari sejarah serta informasi yang terkandung di dalamnya.
-					</p>
-					<p>
-						Dikembangkan oleh Dinas Arsip dan Perpustakaan Kabupaten Bekasi dengan semangat
-						menjaga memori kolektif melalui teknologi.
-					</p>
-				</div>
 
-				<div id="play_button">
-					<p>JELAJAHI ARSIP</p>
-				</div>
+	<!-- Loader Overlay -->
+	<div id="loader">
+		<div class="spinner"></div>
+		<p>Memuat Pameran Virtual...</p>
+	</div>
+
+	<div id="menu">
+		<div id="content">
+			<h1>Pameran Virtual Arsip</h1>
+			<p>Selamat datang di pengalaman Pameran Virtual Arsip.</p>
+			<p>
+				Jelajahi setiap sudut pameran virtual, temukan berbagai koleksi arsip penting,
+				dan pelajari sejarah serta informasi yang terkandung di dalamnya.
+			</p>
+			<p>
+				Dikembangkan oleh Dinas Arsip dan Perpustakaan Kabupaten Bekasi dengan semangat
+				menjaga memori kolektif melalui teknologi.
+			</p>
+			<div id="play_button">
+				<p>JELAJAHI ARSIP</p>
 			</div>
 		</div>
 	</div>
 
-	<div id="info-panel">
-		<div id="info-header">
-			<h3>Kendali</h3>
-			<button id="toggle-info">Sembunyikan</button>
+	<div id="control-wrapper">
+		<div>
+			<p class="control-text">Keluar</p>
+			<button class="control-button" id="exit-button">Esc</button>
 		</div>
-		<div id="info-content">
-			<p><b>W/A/S/D:</b> Bergerak</p>
-			<p><b>Mouse:</b> Melihat sekitar</p>
-			<p><b>Spasi:</b> Aktif/nonaktif pointer lock</p>
-			<p><b>Enter:</b> Mulai penjelajahan</p>
-			<p><b>Esc:</b> Berhenti penjelajahan</p>
+
+		<div>
+			<p class="control-text">Pointer Lock</p>
+			<button class="control-button" id="space-button">Spasi</button>
 		</div>
+
+		<div>
+			<p class="control-text">Mulai</p>
+			<button class="control-button" id="space-button">Enter</button>
+		</div>
+	</div>
+
+	<div id="direction-wrapper">
+		<div class="dpad-grid">
+			<div></div>
+			<button class="dir-button" id="up-button">W</button>
+			<div></div>
+
+			<button class="dir-button" id="left-button">A</button>
+			<div class="aswd-box"></div>
+			<button class="dir-button" id="right-button">D</button>
+
+			<div></div>
+			<button class="dir-button" id="down-button">S</button>
+			<div></div>
+		</div>
+	</div>
+
+	<p id="mouse-hint-text">Gunakan Mouse untuk melihat sekitar</p>
+	<div id="mouse-hint">
+		<svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+			<rect x="12" y="4" width="24" height="40" rx="12" ry="12" stroke="white" stroke-width="3" fill="none" />
+			<line x1="24" y1="8" x2="24" y2="16" stroke="white" stroke-width="2" />
+			<line x1="12" y1="24" x2="36" y2="24" stroke="white" stroke-width="2" />
+		</svg>
 	</div>
 
 	<div id="painting-info"></div>

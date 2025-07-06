@@ -23,36 +23,36 @@ export function createWalls(scene, textureLoader) {
 	
 	// Front Wall
 	const frontWall = new THREE.Mesh(
-		new THREE.BoxGeometry(80, 20, 0.001),
+		new THREE.BoxGeometry(80, 50, 0.001),
 		wallMaterial
 	);
 
-	frontWall.position.z = -20;
+	frontWall.position.z = -40;
 
 	// Left Wall
 	const leftWall = new THREE.Mesh(
-		new THREE.BoxGeometry(80, 20, 0.001),
+		new THREE.BoxGeometry(80, 50, 0.001),
 		wallMaterial
 	);
 
 	leftWall.rotation.y = Math.PI / 2;
-	leftWall.position.x = -20;
+	leftWall.position.x = -40;
 
 	// Right Wall
 	const rightWall = new THREE.Mesh(
-		new THREE.BoxGeometry(80, 20, 0.001),
+		new THREE.BoxGeometry(80, 50, 0.001),
 		wallMaterial
 	);
 
-	rightWall.position.x = 20;
+	rightWall.position.x = 40;
 	rightWall.rotation.y = Math.PI / 2;
 
 	// Back Wall
 	const backWall = new THREE.Mesh(
-		new THREE.BoxGeometry(80, 20, 0.001),
+		new THREE.BoxGeometry(80, 50, 0.001),
 		wallMaterial
 	);
-	backWall.position.z = 20;
+	backWall.position.z = 40;
 
 	wallGroup.add(frontWall, backWall, leftWall, rightWall);
 

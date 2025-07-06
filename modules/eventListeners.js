@@ -1,5 +1,5 @@
 import { keysPressed } from "./movement.js"; // import the keysPressed object
-import { showMenu, hideMenu } from "./menu.js"; // import the showMenu function
+import { showMenu, hideMenu, hideControls, showConstrols } from "./menu.js"; // import the showMenu function
 
 let lockPointer = true;
 let showMenuOnUnlock = false;
@@ -21,6 +21,7 @@ export const setupEventListeners = (controls, camera, scene) => {
 	controls.addEventListener("unlock", () => {
 		if (showMenuOnUnlock) {
 			showMenu();
+			hideControls();
 		}
 		showMenuOnUnlock = false;
 	});
@@ -47,6 +48,7 @@ function onKeyDown(event, controls) {
 	if (event.key === "Escape") {
 		// if the "ESC" key is pressed
 		showMenu(); // show the menu
+		hideControls();
 		showMenuOnUnlock = true;
 		controls.unlock(); // unlock the pointer
 		lockPointer = false;
@@ -62,6 +64,7 @@ function onKeyDown(event, controls) {
 	if (event.key === "Enter" || event.key === "Return") {
 		// if the "ENTER" key is pressed
 		hideMenu(); // hide the menu
+		showConstrols();
 		controls.lock(); // lock the pointer
 		lockPointer = true;
 	}
@@ -74,6 +77,7 @@ function onKeyDown(event, controls) {
 	if (event.key === "m") {
 		// if the "h" key is pressed
 		showMenu(); // show the menu
+		hideControls();
 		showMenuOnUnlock = true;
 		controls.unlock(); // unlock the pointer
 		lockPointer = false;
@@ -91,12 +95,3 @@ function onKeyUp(event, controls) {
 		keysPressed[event.key] = false; // set to false when the key is released
 	}
 }
-
-document.getElementById("toggle-info").addEventListener("click", () => {
-	document.getElementById("info-panel").classList.toggle("collapsed");
-	document.getElementById("toggle-info").innerText = document
-		.getElementById("info-panel")
-		.classList.contains("collapsed")
-		? "Tampilkan"
-		: "Sembunyikan";
-});

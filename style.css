@@ -45,7 +45,7 @@ canvas {
 }
 
 #menu {
-    width: 40em;
+    width: 50em;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -54,102 +54,49 @@ canvas {
     font-size: 1.2em;
     border-radius: 0.9em;
     box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.6);
-    overflow: hidden;
-}
-
-#menu .title {
-    padding: 1em;
-    background-color: rgba(0, 128, 0, 0.8);
-    color: #ffffff;
-    border-radius: 0.9em;
-    position: relative;
-    z-index: 2;
-}
-
-#menu .title:hover {
-    transform: rotateX(0deg);
-}
-
-.title-info {
-    background-color: rgba(0, 128, 0, 0.8);
-    color: #ffffff;
-    padding: 1em;
-    border-radius: 0.9em;
-    width: 80%;
-    text-align: center;
-    margin: 0 auto;
-    font-size: 10pt;
-    margin-bottom: 100px;
-}
-
-#menu #content_container {
-    padding: 1em;
-    border-bottom-left-radius: 0.9em;
-    border-bottom-right-radius: 0.9em;
-
-    -webkit-box-shadow: 0em 0.25em 0.75em rgba(124, 124, 124, 0.5);
-    -moz-box-shadow: 0em 0.25em 0.75em rgba(124, 124, 124, 0.5);
-    box-shadow: 0em 0.25em 0.75em rgba(124, 124, 124, 0.5);
-}
-
-#menu #img_container {
-    position: relative;
-    height: 5em;
-    overflow: hidden;
-    border-top-left-radius: 0.9em;
-    border-top-right-radius: 0.9em;
-}
-
-#menu #img_container img {
-    flex-shrink: 0;
-    width: 105%;
-}
-
-#menu {
-    width: 40em;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    font-size: 1.2em;
-    border-radius: 0.9em;
-    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.6);
-    overflow: hidden;
-}
-
-#menu .title h1 {
-    margin: 0;
-    font-size: 2.5em;
 }
 
 #menu #content {
-    padding: 1em;
+    position: relative;
+    overflow: visible;
+    padding: 1em 1em 5em 1em;
     margin-top: 0;
+    color: #fff;
+    border-radius: 0.9em;
+    background: linear-gradient(to bottom,
+            rgba(144, 238, 144, 0.8),
+            rgba(0, 100, 0, 0.9));
+}
+
+#menu #content h1 {
+    font-size: 2.5em;
 }
 
 #menu #content p {
-    font-size: 1.1em;
+    font-size: 1.2em;
     line-height: 1.6em;
     margin: 0.5em 0;
 }
 
 #menu #play_button {
+    position: absolute;
+    bottom: -2.5em;
+    left: 50%;
+    transform: translateX(-50%);
     display: inline-block;
     background-color: rgba(52, 58, 125, 0.8);
     color: #ffffff;
     border-radius: 0.9em;
-    padding: 0.5em 1.5em;
+    padding: 1em 2.5em;
     font-weight: bold;
-    margin-top: 1em;
-    margin-bottom: 1em;
     transition: all 0.4s;
+    z-index: 99;
 }
 
 #menu #play_button:hover {
-    background-color: rgba(52, 58, 125);
+    transform: translateX(-50%) scale(1.1);
+    background-color: rgba(52, 58, 125, 1);
     cursor: pointer;
-    transform: scale(1.05);
 }
 
 canvas {
@@ -161,30 +108,6 @@ canvas {
     position: relative;
     display: inline-block;
     margin-bottom: 1em;
-}
-
-#starry_night_bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("public/images/bg-welcome-new.png");
-    background-size: cover;
-    background-position: center;
-    z-index: -1;
-    animation: panBg 30s linear infinite;
-    background-attachment: fixed;
-}
-
-#starry_night_bg:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.4);
 }
 
 @keyframes panBg {
@@ -207,7 +130,7 @@ canvas {
     font-family: "Arial", sans-serif;
     color: #fff;
     width: 300px;
-    height: 150px;
+    height: auto;
     z-index: 1;
     transition: all 0.3s ease-in-out;
     transform: translateY(100px);
@@ -221,7 +144,7 @@ canvas {
 
 #painting-info h3 {
     margin: 0 0 10px 0;
-    font-size: 2em;
+    font-size: 1.3em;
     font-weight: bold;
     text-transform: uppercase;
 }
@@ -229,66 +152,187 @@ canvas {
 #painting-info p {
     margin: 0;
     font-size: 1.2em;
+    padding: 4px 0;
 }
 
-#info-panel {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    width: 200px;
-    background-color: rgba(0, 128, 0, 0.8);
-    border-radius: 10px;
-    padding: 10px;
-    color: white;
-    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.6);
-    overflow: hidden;
-    transition: all 0.5s ease;
-}
-
-#info-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    cursor: pointer;
-}
-
-#info-header h3 {
-    font-size: 1.5em;
+#painting-info p .label {
+    width: 100px;
+    display: inline-block;
     font-weight: bold;
-    margin: 0;
 }
 
-#info-header button {
-    background-color: rgba(255, 255, 255, 0.8);
-    border: none;
-    border-radius: 5px;
-    padding: 5px;
-    cursor: pointer;
-    color: rgba(0, 128, 0, 0.8);
+#painting-info .btn-link {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #0d6efd;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    margin-top: 12px;
 }
 
-#info-content {
-    font-size: 1em;
-    line-height: 1.5em;
+#painting-info .btn-link:hover {
+    background-color: #0b5ed7;
 }
 
-#info-content p {
-    margin: 5px 0;
-}
-
-#info-panel.collapsed #info-content {
-    max-height: 0;
-    overflow: hidden;
-}
-
-#close-about {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 2em;
-    position: absolute;
-    top: 10px;
+#control-wrapper {
+    position: fixed;
+    top: 20px;
     right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1000;
+    gap: 12px;
+    text-align: center;
+}
+
+.control-text {
+    margin: 0;
+    font-size: 12px;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.control-button {
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 12px;
+    font-weight: bold;
     cursor: pointer;
+    font-family: monospace;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    cursor: none;
+    width: 60px;
+}
+
+#exit-button {
+    background: linear-gradient(to bottom, #e53935, #b71c1c);
+}
+
+#space-button {
+    background: linear-gradient(to bottom, #66bb6a, #2e7d32);
+}
+
+#direction-wrapper {
+    position: fixed;
+    bottom: 40px;
+    right: 20px;
+    display: grid;
+    place-items: center;
+}
+
+.dpad-grid {
+    display: grid;
+    grid-template-columns: 50px 50px 50px;
+    grid-template-rows: 50px 50px 50px;
+    gap: 8px;
+}
+
+.dir-button {
+    background: linear-gradient(to bottom, #ffa726, #f57c00);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: monospace;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s;
+    cursor: none;
+}
+
+.aswd-box {
+    width: 40px;
+    height: 40px;
+    background: #eee;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-size: 12px;
+    color: #333;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+#mouse-hint {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(to bottom, #42a5f5, #1565c0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+#mouse-hint-text {
+    position: fixed;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 14px;
+}
+
+#control-wrapper,
+#direction-wrapper,
+#mouse-hint,
+#mouse-hint-text {
+    display: none;
+}
+
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #1565c0;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+#loader p {
+    margin-top: 20px;
+    font-family: sans-serif;
+    font-size: 18px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #fff;
+    border-top: 5px solid #42a5f5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#painting-info.locked a {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.5;
 }

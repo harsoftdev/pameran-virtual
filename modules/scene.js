@@ -15,7 +15,7 @@ export const setupScene = () => {
         1000 // far clipping plane
     );
     scene.add(camera); // add the camera to the scene
-    camera.position.set(0, 2, 15); // move the camera up 3 units in the Y axis
+    camera.position.set(0, 4, 25); // move the camera up 3 units in the Y axis
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);

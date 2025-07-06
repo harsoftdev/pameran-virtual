@@ -35,6 +35,7 @@ export const paintingData = [
 			link: 'https://github.com/theringsofsaturn',
 		},
 	})),
+
 	// Right Wall
 	...Array.from({ length: 4 }, (_, i) => ({
 		imgSrc: `artworks/${i + 13}.jpg`,

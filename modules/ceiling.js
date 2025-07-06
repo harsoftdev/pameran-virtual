@@ -34,7 +34,7 @@ export const createCeiling = (scene, textureLoader) => {
 	normalGLTexture.wrapS = normalGLTexture.wrapT = THREE.RepeatWrapping;
 	roughnessTexture.wrapS = roughnessTexture.wrapT = THREE.RepeatWrapping;
 
-	const ceilingGeometry = new THREE.PlaneGeometry(45, 40);
+	const ceilingGeometry = new THREE.PlaneGeometry(102, 102);
 	const ceilingMaterial = new THREE.MeshStandardMaterial({
 		map: colorTexture,
 		displacementMap: displacementTexture,
@@ -50,7 +50,7 @@ export const createCeiling = (scene, textureLoader) => {
 
 	ceilingPlane.rotation.x = Math.PI / 2;
 
-	ceilingPlane.position.y = 10;
+	ceilingPlane.position.y = 15;
 
 	scene.add(ceilingPlane);
 };

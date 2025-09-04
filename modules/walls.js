@@ -58,3 +58,29 @@ export function createWalls(scene, textureLoader) {
 
 	return wallGroup;
 }
+
+export const createDoor = (scene, textureLoader) => {
+	const doorTexture = textureLoader.load('images/door.png');
+	const doorGeometry = new THREE.PlaneGeometry(5, 10);
+	const doorMaterial = new THREE.MeshStandardMaterial({
+		map: doorTexture,
+		side: THREE.DoubleSide,
+	});
+
+	const door = new THREE.Mesh(doorGeometry, doorMaterial);
+
+	// Tinggi pintu
+	const doorHeight = 5;
+
+	// Ketinggian lantai
+	const floorY = 0;
+
+	// Jadi posisi Y pintu = dasar lantai + setengah tinggi pintu
+	door.position.y = floorY + (doorHeight / 1); // = 3.5
+
+	// Tempel ke dinding belakang
+	door.position.z = 40 - 0.05; // Mundur sedikit supaya nggak z-fighting
+	door.rotation.y = Math.PI;
+
+	scene.add(door);
+};

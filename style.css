@@ -336,3 +336,10 @@ canvas {
     cursor: default;
     opacity: 0.5;
 }
+
+#logo-wrapper {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+}

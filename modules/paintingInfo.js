@@ -8,7 +8,7 @@ export const displayPaintingInfo = (info) => {
 		<p><span class="label">Klasifikasi</span> : ${info.classification}</p>
 		<p><span class="label">Tahun</span> : ${info.year}</p>
 		<p><span class="label">Jumlah</span> : ${info.amount}</p>
-		<a href="${info.link}" class="btn-link" target="_blank">Lihat Arsip</a>
+		<p>Klik untuk melihat arsip &rarr;</p>
     `;
 	infoElement.classList.add('show'); // Add the 'show' class
 };

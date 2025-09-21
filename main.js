@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { scene, setupScene } from "./modules/scene.js";
 import { createPaintings } from "./modules/paintings.js";
-import { createDoor, createWalls } from "./modules/walls.js";
+import { createDoor, createSkyBehindDoor, createSkyOutside, createWalls, createWindow } from "./modules/walls.js";
 import { setupFloor } from "./modules/floor.js";
 import { createCeiling } from "./modules/ceiling.js";
 import { createBoundingBoxes } from "./modules/boundingBox.js";
@@ -10,39 +10,101 @@ import { setupEventListeners } from "./modules/eventListeners.js";
 import { addObjectsToScene } from "./modules/sceneHelpers.js";
 import { setupPlayButton } from "./modules/menu.js";
 import { clickHandling } from "./modules/clickHandling.js";
-import { createFurniture } from "./modules/furniture.js";
+import { createFurniture, createPots } from "./modules/furniture.js";
+import { createMiddleWall, createTitleBox } from "./modules/middleWall.js";
+
+// === LOADING MANAGER SETUP ===
+const manager = new THREE.LoadingManager();
+
+const startTime = Date.now();
+
+// Update progress bar setiap kali ada asset di-load
+manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+	const percent = (itemsLoaded / itemsTotal) * 100;
+	document.getElementById("progress-bar").style.width = percent + "%";
+	document.getElementById("progress-text").textContent =
+		// `Memuat Pameran Virtual... ${Math.round(percent)}%`;
+		`Memuat Pameran Virtual...`;
+};
+
+// Ketika semua asset selesai di-load
+manager.onLoad = function () {
+	const elapsed = Date.now() - startTime;
+	const minDuration = 1500; // minimal 1.5 detik tampil biar smooth
+
+	const wait = Math.max(0, minDuration - elapsed);
+
+	setTimeout(async () => {
+		// pastikan shader sudah compile sebelum loader hilang
+		if (renderer.compileAsync) {
+			await renderer.compileAsync(scene, camera);
+		} else {
+			renderer.render(scene, camera); // fallback render sekali
+		}
+
+		// fade-in canvas
+		document.querySelector("canvas").classList.add("loaded");
+
+		// hilangkan loader
+		const loaderDiv = document.getElementById("loader");
+		loaderDiv.style.opacity = 0;
+		setTimeout(() => (loaderDiv.style.display = "none"), 500);
+	}, wait);
+};
+
+// Gunakan manager di TextureLoader
+const textureLoader = new THREE.TextureLoader(manager);
+
+let camera, controls, renderer;
 
 (async () => {
-  let { camera, controls, renderer } = setupScene();
-  const textureLoader = new THREE.TextureLoader();
+	// setup scene
+	({ camera, controls, renderer } = setupScene());
 
-  const walls = createWalls(scene, textureLoader);
-  const floor = setupFloor(scene);
-  const furniture = createFurniture(scene);
-  const ceiling = createCeiling(scene, textureLoader);
-  const door = createDoor(scene, textureLoader);
-  const paintings = await createPaintings(scene, textureLoader);
+	// bikin objek scene
+	const walls = createWalls(scene, textureLoader);
+	const middleWalls = await createMiddleWall(scene, textureLoader);
+	setupFloor(scene);
+	const furniture = await createFurniture(scene);
+	createCeiling(scene, textureLoader);
+	const door = createDoor(scene, textureLoader);
+	createSkyBehindDoor(scene, door, textureLoader);
+	createPots(scene);
+	const [leftWindow, rightWindow] = createWindow(scene, textureLoader);
+	createSkyOutside(scene, [leftWindow, rightWindow], textureLoader);
+	// Tambahkan ambient + hemi light untuk penerangan seluruh ruangan
+	const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+	scene.add(ambient);
+	const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5);
+	hemiLight.position.set(0, 20, 0);
+	scene.add(hemiLight);
 
-  createBoundingBoxes(walls);
-  createBoundingBoxes(paintings);
+	const paintings = await createPaintings(scene, textureLoader);
 
-  addObjectsToScene(scene, paintings);
+	// bounding box
+	createBoundingBoxes(walls);
+	createBoundingBoxes(middleWalls);
+	createBoundingBoxes(paintings);
 
-  setupPlayButton(controls);
-  setupEventListeners(controls);
-  clickHandling(renderer, camera, paintings);
-  setupRendering(scene, camera, renderer, paintings, controls, walls);
+	const allWalls = [...walls.children, ...middleWalls.children, ...furniture];
 
-  document.addEventListener('pointerlockchange', () => {
-    const infoElement = document.getElementById('painting-info');
-    if (document.pointerLockElement) {
-      infoElement.classList.add('locked');
-    } else {
-      infoElement.classList.remove('locked');
-    }
-  });
+	// createTitleBox(scene);
 
-  const loaderDiv = document.getElementById('loader');
-  loaderDiv.style.opacity = 0;
-  setTimeout(() => loaderDiv.style.display = 'none', 500);
+	// add ke scene
+	addObjectsToScene(scene, paintings);
+
+	// setup controls & event
+	setupPlayButton(controls);
+	setupEventListeners(controls);
+	clickHandling(renderer, camera, paintings);
+	setupRendering(scene, camera, renderer, paintings, controls, allWalls);
+
+	document.addEventListener("pointerlockchange", () => {
+		const infoElement = document.getElementById("painting-info");
+		if (document.pointerLockElement) {
+			infoElement.classList.add("locked");
+		} else {
+			infoElement.classList.remove("locked");
+		}
+	});
 })();

@@ -20,7 +20,7 @@ export function createWalls(scene, textureLoader) {
 		roughnessMap: roughnessTexture,
 		side: THREE.DoubleSide,
 	});
-	
+
 	// Front Wall
 	const frontWall = new THREE.Mesh(
 		new THREE.BoxGeometry(80, 50, 0.001),
@@ -65,22 +65,97 @@ export const createDoor = (scene, textureLoader) => {
 	const doorMaterial = new THREE.MeshStandardMaterial({
 		map: doorTexture,
 		side: THREE.DoubleSide,
+		transparent: true,
+		depthTest: true,
 	});
 
 	const door = new THREE.Mesh(doorGeometry, doorMaterial);
+	door.renderOrder = 1;
 
-	// Tinggi pintu
-	const doorHeight = 5;
-
-	// Ketinggian lantai
 	const floorY = 0;
-
-	// Jadi posisi Y pintu = dasar lantai + setengah tinggi pintu
-	door.position.y = floorY + (doorHeight / 1); // = 3.5
-
-	// Tempel ke dinding belakang
-	door.position.z = 40 - 0.05; // Mundur sedikit supaya nggak z-fighting
+	const doorHeight = 10; // sesuaikan dengan geometry
+	door.position.y = floorY + doorHeight / 2; // tengah pintu
+	door.position.z = 40 - 0.05;
 	door.rotation.y = Math.PI;
 
 	scene.add(door);
+	return door;
 };
+
+export const createWindow = (scene, textureLoader) => {
+	const windowTexture = textureLoader.load('images/window.png');
+	const windowGeometry = new THREE.PlaneGeometry(12, 8);
+	const windowMaterial = new THREE.MeshStandardMaterial({
+		map: windowTexture,
+		transparent: true,
+		side: THREE.DoubleSide,
+		depthTest: true,
+	});
+
+	const leftWindow = new THREE.Mesh(windowGeometry, windowMaterial);
+	const rightWindow = new THREE.Mesh(windowGeometry, windowMaterial);
+
+	// Posisi kiri dan kanan dari pintu
+	const doorWidth = 5;
+	const windowOffset = 14; // jarak dari pinggir pintu
+	const windowHeight = 6;
+	const backWallZ = 40 - 0.05;
+
+	leftWindow.position.set(-doorWidth / 2 - windowOffset, windowHeight, backWallZ);
+	rightWindow.position.set(doorWidth / 2 + windowOffset, windowHeight, backWallZ);
+
+	leftWindow.rotation.y = Math.PI;
+	rightWindow.rotation.y = Math.PI;
+
+	leftWindow.renderOrder = 1;
+	rightWindow.renderOrder = 1;
+
+	scene.add(leftWindow, rightWindow);
+
+	return [leftWindow, rightWindow];
+};
+
+export const createSkyBehindDoor = (scene, doorMesh, textureLoader) => {
+	const skyTexture = textureLoader.load('images/clouds-sky.jpg');
+	const { width, height } = doorMesh.geometry.parameters;
+	const skyGeometry = new THREE.PlaneGeometry(width, height);
+	skyGeometry.scale(0.85, 0.85, 1);
+	const skyMaterial = new THREE.MeshStandardMaterial({
+		map: skyTexture,
+		transparent: true,
+		side: THREE.DoubleSide,
+	});
+
+	const skyMesh = new THREE.Mesh(skyGeometry, skyMaterial);
+	skyMesh.position.copy(doorMesh.position);
+	skyMesh.position.z = doorMesh.position.z + 0.01;
+	skyMesh.rotation.copy(doorMesh.rotation);
+	skyMesh.renderOrder = 0;
+
+	scene.add(skyMesh);
+	return skyMesh;
+};
+
+export const createSkyOutside = (scene, windowMeshes, textureLoader) => {
+	const skyTexture = textureLoader.load('images/clouds-sky.jpg');
+	return windowMeshes.map((win) => {
+		const { width, height } = win.geometry.parameters;
+		const skyGeometry = new THREE.PlaneGeometry(width, height);
+		skyGeometry.scale(0.75, 0.75, 1);
+		const skyMaterial = new THREE.MeshStandardMaterial({
+			map: skyTexture,
+			transparent: true,
+			side: THREE.DoubleSide,
+		});
+
+		const skyMesh = new THREE.Mesh(skyGeometry, skyMaterial);
+		skyMesh.position.copy(win.position);
+		skyMesh.position.z = win.position.z + 0.01;
+		skyMesh.rotation.copy(win.rotation);
+		skyMesh.renderOrder = 0;
+
+		scene.add(skyMesh);
+		return skyMesh;
+	});
+};
+

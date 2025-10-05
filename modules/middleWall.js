@@ -98,7 +98,6 @@ export const createFramedBox = async (parentGroup, position, boxSize, frameImage
 
         try {
             const image = await loadImage(`${basePath}${frameImagePath}`);
-            console.log('Successfully loaded image:', `${basePath}${frameImagePath}`);
             const imageSize = 600; // Consistent image size across all frames
             const imageX = (canvas.width - imageSize) / 2;
             const imageY = (canvas.height - imageSize) / 2;
@@ -137,7 +136,6 @@ export const createFramedBox = async (parentGroup, position, boxSize, frameImage
     plane.position.set(0, 0, depth / 2 + 0.01);
     box.add(plane);
 
-    console.log('Created framed box with texture at position:', position);
     return box;
 };
 

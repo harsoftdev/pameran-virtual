@@ -12,6 +12,7 @@ import { setupPlayButton } from "./modules/menu.js";
 import { clickHandling, updatePointerLockStatus } from "./modules/clickHandling.js";
 import { createFurniture, createPots } from "./modules/furniture.js";
 import { createMiddleWall, createTitleBox } from "./modules/middleWall.js";
+import { setupAudio, startAudio } from "./modules/audioGuide.js";
 
 // === LOADING MANAGER SETUP ===
 const manager = new THREE.LoadingManager();
@@ -48,7 +49,9 @@ manager.onLoad = function () {
 		// hilangkan loader
 		const loaderDiv = document.getElementById("loader");
 		loaderDiv.style.opacity = 0;
-		setTimeout(() => (loaderDiv.style.display = "none"), 500);
+		setTimeout(() => {
+			loaderDiv.style.display = "none";
+		}, 500);
 	}, wait);
 };
 
@@ -61,6 +64,8 @@ let camera, controls, renderer;
 	// setup scene
 	({ camera, controls, renderer } = setupScene());
 
+	// setup audio
+	setupAudio(camera);
 	// bikin objek scene
 	const walls = createWalls(scene, textureLoader);
 	const middleWalls = await createMiddleWall(scene, textureLoader);
@@ -99,16 +104,31 @@ let camera, controls, renderer;
 	clickHandling(renderer, camera, paintings);
 	setupRendering(scene, camera, renderer, paintings, controls, allWalls);
 
+	// Add one-time user interaction handler for audio autoplay
+	let audioStarted = false;
+	const startAudioOnInteraction = () => {
+		if (!audioStarted) {
+			startAudio();
+			audioStarted = true;
+			// Remove the listener after first use
+			document.removeEventListener("click", startAudioOnInteraction);
+			document.removeEventListener("keydown", startAudioOnInteraction);
+		}
+	};
+
+	document.addEventListener("click", startAudioOnInteraction);
+	document.addEventListener("keydown", startAudioOnInteraction);
+
 	document.addEventListener("pointerlockchange", () => {
 		const infoElement = document.getElementById("painting-info");
 		const isLocked = !!document.pointerLockElement;
-		
+
 		if (isLocked) {
 			infoElement.classList.add("locked");
 		} else {
 			infoElement.classList.remove("locked");
 		}
-		
+
 		// Update click handling status
 		updatePointerLockStatus(isLocked);
 	});

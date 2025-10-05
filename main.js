@@ -88,7 +88,7 @@ let camera, controls, renderer;
 
 	const allWalls = [...walls.children, ...middleWalls.children, ...furniture];
 
-	// createTitleBox(scene);
+	await createTitleBox(scene);
 
 	// add ke scene
 	addObjectsToScene(scene, paintings);

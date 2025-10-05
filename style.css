@@ -209,7 +209,11 @@ canvas {
     background: linear-gradient(to bottom, #e53935, #b71c1c);
 }
 
-#space-button {
+#space-button, #sound-button, #refresh-button {
+    background: linear-gradient(to bottom, #42a5f5, #1565c0);
+}
+
+#sound-button, #refresh-button {
     background: linear-gradient(to bottom, #66bb6a, #2e7d32);
 }
 

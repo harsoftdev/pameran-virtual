@@ -1,6 +1,7 @@
 import { keysPressed } from "./movement.js"; // import the keysPressed object
 import { showMenu, hideMenu, hideControls, showConstrols } from "./menu.js"; // import the showMenu function
 import { updatePointerLockStatus } from "./clickHandling.js"; // import untuk update pointer lock status
+import { toggleAudio } from "./audioGuide.js";
 
 let lockPointer = false; // Awalnya pointer belum terkunci
 let showMenuOnUnlock = false;
@@ -92,12 +93,12 @@ function onKeyDown(event, controls) {
 	}
 
 	if (event.key === "m") {
-		// if the "h" key is pressed
-		showMenu(); // show the menu
-		hideControls();
-		showMenuOnUnlock = true;
-		controls.unlock(); // unlock the pointer
-		lockPointer = false;
+		// if the "m" key is pressed
+		toggleAudio(); // toggle audio on/off
+		const button = document.getElementById(`sound-button`);
+		if (button) {
+			button.classList.add("pressed");
+		}
 	}
 
 	if (event.key === "r") {
@@ -127,6 +128,13 @@ function onKeyDown(event, controls) {
 
 		if (event.key === " ") {
 			const button = document.getElementById(`space-button`);
+			if (button) {
+				button.classList.remove("pressed");
+			}
+		}
+		
+		if (event.key === "m") {
+			const button = document.getElementById(`sound-button`);
 			if (button) {
 				button.classList.remove("pressed");
 			}

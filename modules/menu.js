@@ -13,6 +13,7 @@ export const startExperience = (controls) => {
 	controls.lock(); // Lock the pointer (controls are activated)
 	hideMenu();
 	showConstrols();
+	// Status akan diupdate otomatis oleh event listener 'lock' di eventListeners.js
 };
 
 export const setupPlayButton = (controls) => {

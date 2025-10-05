@@ -9,7 +9,7 @@ import { setupRendering } from "./modules/rendering.js";
 import { setupEventListeners } from "./modules/eventListeners.js";
 import { addObjectsToScene } from "./modules/sceneHelpers.js";
 import { setupPlayButton } from "./modules/menu.js";
-import { clickHandling } from "./modules/clickHandling.js";
+import { clickHandling, updatePointerLockStatus } from "./modules/clickHandling.js";
 import { createFurniture, createPots } from "./modules/furniture.js";
 import { createMiddleWall, createTitleBox } from "./modules/middleWall.js";
 
@@ -101,10 +101,15 @@ let camera, controls, renderer;
 
 	document.addEventListener("pointerlockchange", () => {
 		const infoElement = document.getElementById("painting-info");
-		if (document.pointerLockElement) {
+		const isLocked = !!document.pointerLockElement;
+		
+		if (isLocked) {
 			infoElement.classList.add("locked");
 		} else {
 			infoElement.classList.remove("locked");
 		}
+		
+		// Update click handling status
+		updatePointerLockStatus(isLocked);
 	});
 })();

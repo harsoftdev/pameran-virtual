@@ -2,11 +2,22 @@ import * as THREE from 'three';
 
 const mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
+let isPointerLocked = false;
+
+// Export function untuk update pointer lock status
+function updatePointerLockStatus(locked) {
+	isPointerLocked = locked;
+}
 
 function clickHandling(renderer, camera, paintings) {
 	renderer.domElement.addEventListener(
 		'click',
 		(event) => {
+			// Hanya proses click jika pointer TIDAK sedang terkunci (cursor terlihat)
+			if (isPointerLocked) {
+				return;
+			}
+			
 			mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 			mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 			onClick(camera, paintings);
@@ -26,4 +37,4 @@ function onClick(camera, paintings) {
 	}
 }
 
-export { clickHandling };
+export { clickHandling, updatePointerLockStatus };

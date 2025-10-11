@@ -10,7 +10,7 @@ import { setupEventListeners } from "./modules/eventListeners.js";
 import { addObjectsToScene } from "./modules/sceneHelpers.js";
 import { setupPlayButton } from "./modules/menu.js";
 import { clickHandling, updatePointerLockStatus } from "./modules/clickHandling.js";
-import { createFurniture, createPots } from "./modules/furniture.js";
+import { createFurniture, createPots, createTvMonitor } from "./modules/furniture.js";
 import { createMiddleWall, createTitleBox } from "./modules/middleWall.js";
 import { setupAudio, startAudio } from "./modules/audioGuide.js";
 
@@ -58,11 +58,11 @@ manager.onLoad = function () {
 // Gunakan manager di TextureLoader
 const textureLoader = new THREE.TextureLoader(manager);
 
-let camera, controls, renderer;
+let camera, controls, renderer, css3dRenderer, css3dScene;
 
 (async () => {
 	// setup scene
-	({ camera, controls, renderer } = setupScene());
+	({ camera, controls, renderer, css3dRenderer, css3dScene } = setupScene());
 
 	// setup audio
 	setupAudio(camera);
@@ -77,6 +77,18 @@ let camera, controls, renderer;
 	createPots(scene);
 	const [leftWindow, rightWindow] = createWindow(scene, textureLoader);
 	createSkyOutside(scene, [leftWindow, rightWindow], textureLoader);
+	
+	// Ambil data exhibition untuk YouTube links
+	let exhibitionData = null;
+	try {
+		const response = await fetch('https://silat.bekasikab.go.id/api/exhibitions');
+		const data = await response.json();
+		exhibitionData = data.data;
+	} catch (error) {
+		console.warn('Could not fetch exhibition data:', error);
+	}
+	
+	const tvMonitors = await createTvMonitor(scene, css3dScene, exhibitionData?.youtube_link_1, exhibitionData?.youtube_link_2);
 	// Tambahkan ambient + hemi light untuk penerangan seluruh ruangan
 	const ambient = new THREE.AmbientLight(0xffffff, 0.3);
 	scene.add(ambient);
@@ -90,8 +102,9 @@ let camera, controls, renderer;
 	createBoundingBoxes(walls);
 	createBoundingBoxes(middleWalls);
 	createBoundingBoxes(paintings);
+	createBoundingBoxes(tvMonitors);
 
-	const allWalls = [...walls.children, ...middleWalls.children, ...furniture];
+	const allWalls = [...walls.children, ...middleWalls.children, ...furniture, ...tvMonitors];
 
 	await createTitleBox(scene);
 
@@ -100,9 +113,9 @@ let camera, controls, renderer;
 
 	// setup controls & event
 	setupPlayButton(controls);
-	setupEventListeners(controls);
+	setupEventListeners(controls, camera, scene, renderer);
 	clickHandling(renderer, camera, paintings);
-	setupRendering(scene, camera, renderer, paintings, controls, allWalls);
+	setupRendering(scene, camera, renderer, paintings, controls, allWalls, css3dRenderer, css3dScene);
 
 	// Add one-time user interaction handler for audio autoplay
 	let audioStarted = false;

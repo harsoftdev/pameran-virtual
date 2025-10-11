@@ -8,7 +8,9 @@ export const setupRendering = (
 	renderer,
 	paintings,
 	controls,
-	walls
+	walls,
+	css3dRenderer,
+	css3dScene
 ) => {
 	const clock = new THREE.Clock();
 
@@ -38,6 +40,12 @@ export const setupRendering = (
 		renderer.gammaFactor = 2.2;
 
 		renderer.render(scene, camera);
+
+		// Render CSS3D scene for iframe overlays
+		if (css3dRenderer && css3dScene) {
+			css3dRenderer.render(css3dScene, camera);
+		}
+
 		requestAnimationFrame(render);
 	};
 

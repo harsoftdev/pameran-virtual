@@ -1,6 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader";
 
+const API_URL = 'https://silat.bekasikab.go.id/api/exhibitions';
+const res = await fetch(API_URL);
+const data = await res.json();
+
 // Reusable wood frame component
 export const drawWoodFrame = (ctx, canvas, frameWidth) => {
     // Outer frame (dark brown)
@@ -55,6 +59,17 @@ export const drawWoodFrame = (ctx, canvas, frameWidth) => {
     });
 };
 
+const loadImage = (src) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        // Tambahkan crossOrigin untuk menghindari tainted canvas
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+        img.src = src;
+    });
+};
+
 // Reusable framed box component
 export const createFramedBox = async (parentGroup, position, boxSize, frameImagePath = null) => {
     const { x, y, z } = position;
@@ -87,27 +102,23 @@ export const createFramedBox = async (parentGroup, position, boxSize, frameImage
 
     // Load and draw image if provided
     if (frameImagePath) {
-        const basePath = import.meta.env.BASE_URL;
-        const loadImage = (src) => {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.src = src;
-            });
-        };
-
         try {
-            const image = await loadImage(`${basePath}${frameImagePath}`);
-            const imageSize = 600; // Consistent image size across all frames
+            const image = await loadImage(frameImagePath);
+            const imageSize = 1600; // Consistent image size across all frames
             const imageX = (canvas.width - imageSize) / 2;
             const imageY = (canvas.height - imageSize) / 2;
-            ctx.drawImage(image, imageX, imageY, imageSize, imageSize);
 
-            // Add fallback text if image loads but appears blank
-            ctx.font = 'bold 96px Arial'; // Consistent with front banner scale
-            ctx.fillStyle = '#666666';
-            ctx.textAlign = 'center';
-            ctx.fillText('No Image', canvas.width / 2, canvas.height / 2 + 400);
+            // Pastikan gambar tidak tainted dengan menggambar ulang ke canvas temporary
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = imageSize;
+            tempCanvas.height = imageSize;
+
+            // Gambar ke temporary canvas dulu
+            tempCtx.drawImage(image, 0, 0, imageSize, imageSize);
+
+            // Kemudian gambar dari temporary canvas ke canvas utama
+            ctx.drawImage(tempCanvas, imageX, imageY);
         } catch (error) {
             console.warn('Could not load frame image:', error);
             // Draw fallback content when image fails to load
@@ -116,8 +127,8 @@ export const createFramedBox = async (parentGroup, position, boxSize, frameImage
             ctx.textAlign = 'center';
             ctx.fillText('No Image Available', canvas.width / 2, canvas.height / 2);
         }
-    }
-
+    }    
+    
     // Create texture and apply to box
     const texture = new THREE.CanvasTexture(canvas);
     texture.generateMipmaps = false;
@@ -142,6 +153,42 @@ export const createFramedBox = async (parentGroup, position, boxSize, frameImage
 export const createMiddleWall = async (scene, textureLoader) => {
     const wallGroup = new THREE.Group();
     scene.add(wallGroup);
+
+    // Function to load image with fallback
+    async function getFrameImage(framePath) {
+        const basePath = import.meta.env.BASE_URL;
+        const defaultImage = `${basePath}images/no-image.png`;
+
+        // Kalau API gak kasih apa-apa, langsung fallback
+        if (!framePath) return defaultImage;
+
+        // Jika path dari API, bisa absolute (http...) atau relative
+        const imageUrl = framePath.startsWith('http')
+            ? framePath
+            : `${basePath}${framePath}`;
+
+        try {
+            // Coba load gambar dengan crossOrigin
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = () => {
+                    reject(new Error('CORS blocked'));
+                };
+                img.src = imageUrl;
+            });
+
+            return imageUrl;
+        } catch (error) {
+            console.warn(`⚠️ Gagal load gambar dari API (CORS issue), pakai default:`, error.message);
+            return defaultImage;
+        }
+    }
+
+    const frameImagePath1 = await getFrameImage(data.data.quotes_image_1);
+    const frameImagePath2 = await getFrameImage(data.data.quotes_image_2);
 
     const normalTexture = textureLoader.load(
         "leather_white_4k.gltf/textures/leather_white_diff_4k.jpg"
@@ -199,7 +246,7 @@ export const createMiddleWall = async (scene, textureLoader) => {
         wallGroup,
         { x: -wallWidth / 2 - 0.1, y: wallHeight / 2 - 3, z: 0 }, // Much closer to wall and raised position
         { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
-        'images/no-image.png'
+        frameImagePath1
     );
     leftWallBox.rotation.y = -Math.PI / 2; // Rotate -90 degrees to face left
 
@@ -208,7 +255,7 @@ export const createMiddleWall = async (scene, textureLoader) => {
         wallGroup,
         { x: wallWidth / 2 + 0.1, y: wallHeight / 2 - 3, z: 0 }, // Much closer to wall and raised position
         { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
-        'images/no-image.png'
+        frameImagePath2
     );
     rightWallBox.rotation.y = Math.PI / 2; // Rotate +90 degrees to face right
 
@@ -251,7 +298,7 @@ export const createTitleBox = async (scene) => {
     ctx.textBaseline = 'middle';
 
     // Auto-wrap text to fit within white content area
-    const text = 'Dinas Arsip Kabupaten Bekasi';
+    const text = data.data.title || 'Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi';
     const maxWidth = canvas.width - (frameWidth * 2) - 60; // Available width minus frame and smaller margins
     const lineHeight = 292; // Scaled up proportionally
 
@@ -304,6 +351,10 @@ export const createTitleBox = async (scene) => {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => resolve(img);
+            img.onerror = () => {
+                console.warn(`Failed to load image: ${src}`);
+                resolve(null); // Return null instead of rejecting
+            };
             img.src = src;
         });
     };
@@ -318,15 +369,20 @@ export const createTitleBox = async (scene) => {
         const disarpusLogoWidth = 600; // Wider Disarpus logo
         const disarpusLogoHeight = 480; // Slightly shorter height for wider appearance
 
-        // Position Bekasi logo (left side) - smaller size as requested
-        const bekasiX = frameWidth + 40; // Adjusted position for smaller frame
-        const bekasiY = canvas.height - frameWidth - bekasiLogoSize - 40;
-        ctx.drawImage(logo1, bekasiX, bekasiY, bekasiLogoSize, bekasiLogoSize);
+        // Only draw logos if they loaded successfully
+        if (logo1) {
+            // Position Bekasi logo (left side) - smaller size as requested
+            const bekasiX = frameWidth + 40; // Adjusted position for smaller frame
+            const bekasiY = canvas.height - frameWidth - bekasiLogoSize - 40;
+            ctx.drawImage(logo1, bekasiX, bekasiY, bekasiLogoSize, bekasiLogoSize);
+        }
 
-        // Position Disarpus logo (right side) - wider format as requested
-        const disarpusX = canvas.width - frameWidth - disarpusLogoWidth - 40;
-        const disarpusY = canvas.height - frameWidth - disarpusLogoHeight - 40;
-        ctx.drawImage(logo2, disarpusX, disarpusY, disarpusLogoWidth, disarpusLogoHeight);
+        if (logo2) {
+            // Position Disarpus logo (right side) - wider format as requested
+            const disarpusX = canvas.width - frameWidth - disarpusLogoWidth - 40;
+            const disarpusY = canvas.height - frameWidth - disarpusLogoHeight - 40;
+            ctx.drawImage(logo2, disarpusX, disarpusY, disarpusLogoWidth, disarpusLogoHeight);
+        }
     } catch (error) {
         console.warn('Could not load logos:', error);
     }

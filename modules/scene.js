@@ -1,10 +1,13 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three-stdlib";
+import { CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 
 export const scene = new THREE.Scene(); // create a scene
+const css3dScene = new THREE.Scene(); // create CSS3D scene
 let camera;
 let controls;
 let renderer;
+let css3dRenderer;
 
 export const setupScene = () => {
     // PerspectiveCamera is a type of camera that mimics the way the human eye sees things. It takes 4 parameters: field of view, aspect ratio, near clipping plane, and far clipping plane. The field of view is the extent of the scene that is seen on the display at any given moment. The aspect ratio should be the width of the element divided by the height (in this case, the screen width and height). The camera will not render objects that are closer to the camera than the near clipping plane or further away than the far clipping plane. Objects that are exactly on the clipping plane will not be rendered.
@@ -31,8 +34,14 @@ export const setupScene = () => {
     renderer.setClearColor(0xffffff, 1); // set the background color of the renderer to white
     document.body.appendChild(renderer.domElement); // append the renderer to the body of the document (the <canvas> element that the renderer uses will be added to the body)
 
-    renderer.shadowMap.enabled = true; // enable shadow mapping
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // `renderer.shadowMap.type` is a property that defines the type of shadow map used by the renderer. THREE.PCFSoftShadowMap is one of the available shadow map types and stands for Percentage-Closer Filtering Soft Shadow Map. This type of shadow map uses an algorithm to smooth the edges of shadows and make them appear softer
+    // Create CSS3D renderer for iframe overlays
+    css3dRenderer = new CSS3DRenderer();
+    css3dRenderer.setSize(window.innerWidth, window.innerHeight);
+    css3dRenderer.domElement.style.position = 'absolute';
+    css3dRenderer.domElement.style.top = '0px';
+    css3dRenderer.domElement.style.left = '0px';
+    css3dRenderer.domElement.style.pointerEvents = 'none'; // Allow clicks to pass through
+    document.body.appendChild(css3dRenderer.domElement);
 
     controls = new PointerLockControls(camera, renderer.domElement); // create a PointerLockControls object that takes the camera and the renderer's domElement as arguments. PointerLockControls is a class that allows the camera to be controlled by the mouse and keyboard.
     scene.add(controls.getObject()); // add the PointerLockControls object to the scene
@@ -43,7 +52,8 @@ export const setupScene = () => {
         camera.aspect = window.innerWidth / window.innerHeight; // update the camera's aspect ratio
         camera.updateProjectionMatrix(); // update the camera's projection matrix. The projection matrix is used to determine how 3D points are mapped to the 2D space of the screen. It is used to calculate the frustum of the camera which is a truncated pyramid that represents the camera's field of view. Anything outside the frustum is not rendered. The projection matrix is used to calculate the frustum every time the window is resized.
         renderer.setSize(window.innerWidth, window.innerHeight); // update the size of the renderer
+        css3dRenderer.setSize(window.innerWidth, window.innerHeight); // update the size of the CSS3D renderer
     }
 
-    return { camera, controls, renderer }; // return the camera, controls, and renderer so that they can be used in other modules
+    return { camera, controls, renderer, css3dRenderer, css3dScene }; // return the camera, controls, renderer, css3dRenderer, and css3dScene
 };

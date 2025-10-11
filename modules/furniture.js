@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader";
+import { CSS3DObject } from "three/addons/renderers/CSS3DRenderer.js";
+
+// Array untuk menyimpan overlay meshes yang bisa diklik
+const clickableOverlays = [];
 
 export const createFurniture = async (scene) => {
     const loader = new GLTFLoader();
@@ -69,3 +73,120 @@ export const createPots = async (scene) => {
     });
 };
 
+export const createTvMonitor = async (scene, css3dScene, youtubeLink1 = null, youtubeLink2 = null) => {
+    const loader = new GLTFLoader();
+    const basePath = import.meta.env.BASE_URL;
+
+    const gltf = await loader.loadAsync(`${basePath}models/tv_monitor.glb`);
+    const tvMonitorOriginal = gltf.scene;
+
+    const scale = 3;
+    const tvMonitors = [];
+
+    // Posisi di wall belakang sebelah jendela kiri dan kanan
+    const positions = [
+        { x: -25, y: 0.5, z: 38, rotationY: Math.PI + Math.PI / 2 + Math.PI, youtubeUrl: youtubeLink1 }, // Kiri dari jendela kiri
+        { x: 25, y: 0.5, z: 38, rotationY: Math.PI + Math.PI / 2 + Math.PI, youtubeUrl: youtubeLink2 }   // Kanan dari jendela kanan
+    ];
+
+    positions.forEach((pos, index) => {
+        const tvMonitor = tvMonitorOriginal.clone();
+        tvMonitor.scale.set(scale, scale, scale);
+        tvMonitor.position.set(pos.x, pos.y, pos.z);
+        tvMonitor.rotation.y = pos.rotationY;
+        scene.add(tvMonitor);
+
+        // Jika ada URL YouTube, buat screen overlay terpisah
+        if (pos.youtubeUrl) {
+            createYouTubeScreenOverlay(scene, css3dScene, tvMonitor, pos, index);
+        }
+
+        // buat bounding box untuk collision
+        const bbox = new THREE.Box3().setFromObject(tvMonitor);
+        tvMonitor.BoundingBox = bbox;
+
+        tvMonitors.push(tvMonitor);
+    });
+
+    return tvMonitors;
+};
+
+// Fungsi untuk membuat overlay layar YouTube terpisah
+function createYouTubeScreenOverlay(scene, css3dScene, tvMonitor, tvPosition, index) {
+    // Ekstrak video ID dari URL YouTube
+    const videoId = extractYouTubeVideoId(tvPosition.youtubeUrl);
+
+    if (videoId) {
+        // Buat elemen iframe YouTube
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&showinfo=0`;
+        iframe.width = '560';
+        iframe.height = '315';
+        iframe.frameBorder = '0';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.style.borderRadius = '8px';
+        iframe.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+
+        // Buat wrapper div untuk kontrol ukuran dan positioning
+        const wrapper = document.createElement('div');
+        wrapper.style.width = '560px';
+        wrapper.style.height = '315px';
+        wrapper.style.position = 'relative';
+        wrapper.style.overflow = 'hidden';
+        wrapper.style.borderRadius = '8px';
+        wrapper.appendChild(iframe);
+
+        // Buat CSS3D object
+        const css3dObject = new CSS3DObject(wrapper);
+
+        // Posisi layar persis pada area screen TV monitor
+        // Sesuaikan dengan geometri tv_monitor.glb
+        css3dObject.position.set(
+            tvPosition.x + 0.15,
+            tvPosition.y + 4.4, // Posisi vertikal yang lebih akurat untuk screen TV
+            tvPosition.z - 1   // Sedikit di depan TV
+        );
+
+        // Rotasi 90 derajat sesuai permintaan + rotasi TV
+        css3dObject.rotation.y = tvPosition.rotationY + Math.PI / 2;
+
+        // Scale untuk menyesuaikan ukuran dengan TV screen
+        css3dObject.scale.set(0.006, 0.006, 0.006);
+
+        css3dScene.add(css3dObject);
+
+        console.log(`YouTube iframe overlay ${index + 1} created and positioned on TV screen`);
+
+        // Tambahkan ke array clickable overlays untuk interaksi klik
+        clickableOverlays.push({
+            css3dObject: css3dObject,
+            element: wrapper,
+            iframe: iframe,
+            youtubeUrl: tvPosition.youtubeUrl,
+            videoId: videoId
+        });
+    }
+}
+
+// Fungsi untuk mengekstrak video ID dari URL YouTube
+function extractYouTubeVideoId(youtubeUrl) {
+    if (!youtubeUrl) return null;
+    
+    // Ekstrak video ID dari berbagai format URL YouTube
+    const patterns = [
+        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+        /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^"&?\/\s]{11})/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = youtubeUrl.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    
+    return null;
+}
+
+export { clickableOverlays };

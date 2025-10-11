@@ -2,13 +2,14 @@ import { keysPressed } from "./movement.js"; // import the keysPressed object
 import { showMenu, hideMenu, hideControls, showConstrols } from "./menu.js"; // import the showMenu function
 import { updatePointerLockStatus } from "./clickHandling.js"; // import untuk update pointer lock status
 import { toggleAudio } from "./audioGuide.js";
+import * as THREE from "three";
 
 let lockPointer = false; // Awalnya pointer belum terkunci
 let showMenuOnUnlock = false;
 let escPressed = false; // Flag khusus untuk ESC
 
 // add the controls parameter which is the pointer lock controls and is passed from main.js where setupEventListeners is called
-export const setupEventListeners = (controls, camera, scene) => {
+export const setupEventListeners = (controls, camera, scene, renderer) => {
 	// add the event listeners to the document which is the whole page
 	document.addEventListener(
 		"keydown",
@@ -20,6 +21,27 @@ export const setupEventListeners = (controls, camera, scene) => {
 		(event) => onKeyUp(event, controls),
 		false
 	);
+
+	// Tambahkan mouse click listener untuk interaksi dengan overlay
+	const raycaster = new THREE.Raycaster();
+	const mouse = new THREE.Vector2();
+
+	document.addEventListener('click', (event) => {
+		// Jangan proses klik jika pointer sedang terkunci (mode 3D navigation)
+		if (document.pointerLockElement) {
+			return;
+		}
+		
+		// Hitung posisi mouse dalam normalized device coordinates
+		mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+		// Update raycaster
+		raycaster.setFromCamera(mouse, camera);
+
+		// Note: YouTube iframes sekarang langsung di 3D space melalui CSS3DRenderer
+		// dan handle klik sendiri, jadi tidak perlu raycasting tambahan
+	});
 
 	controls.addEventListener("unlock", () => {
 		updatePointerLockStatus(false); // Update status click handling
@@ -148,3 +170,8 @@ function onKeyUp(event, controls) {
 		keysPressed[event.key] = false; // set to false when the key is released
 	}
 }
+
+// Setup event listener - tidak diperlukan lagi karena iframe YouTube handle sendiri
+document.addEventListener('DOMContentLoaded', () => {
+	// YouTube iframes sekarang langsung di 3D space dan handle event sendiri
+});

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { displayPaintingInfo, hidePaintingInfo } from "./paintingInfo.js";
 import { updateMovement } from "./movement.js";
+import { updateOverlayVisibility, clickableOverlays } from "./furniture.js";
 
 export const setupRendering = (
 	scene,
@@ -40,6 +41,9 @@ export const setupRendering = (
 		renderer.gammaFactor = 2.2;
 
 		renderer.render(scene, camera);
+
+		// Update overlay visibility based on camera position and occlusion
+		updateOverlayVisibility(camera, clickableOverlays);
 
 		// Render CSS3D scene for iframe overlays
 		if (css3dRenderer && css3dScene) {

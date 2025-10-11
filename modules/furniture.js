@@ -38,7 +38,6 @@ export const createFurniture = async (scene) => {
     scene.add(right);
     furnitures.push(right);
 
-     // buat bounding box untuk collision
     furnitures.forEach((f) => {
         const bbox = new THREE.Box3().setFromObject(f);
         f.BoundingBox = bbox;
@@ -85,8 +84,8 @@ export const createTvMonitor = async (scene, css3dScene, youtubeLink1 = null, yo
 
     // Posisi di wall belakang sebelah jendela kiri dan kanan
     const positions = [
-        { x: -25, y: 0.5, z: 38, rotationY: Math.PI + Math.PI / 2 + Math.PI, youtubeUrl: youtubeLink1 }, // Kiri dari jendela kiri
-        { x: 25, y: 0.5, z: 38, rotationY: Math.PI + Math.PI / 2 + Math.PI, youtubeUrl: youtubeLink2 }   // Kanan dari jendela kanan
+        { x: -25, y: 0.1, z: 38, rotationY: Math.PI + Math.PI / 2 + Math.PI, youtubeUrl: youtubeLink1 }, // Kiri dari jendela kiri
+        { x: 25, y: 0.1, z: 38, rotationY: Math.PI + Math.PI / 2 + Math.PI, youtubeUrl: youtubeLink2 }   // Kanan dari jendela kanan
     ];
 
     positions.forEach((pos, index) => {
@@ -156,15 +155,14 @@ function createYouTubeScreenOverlay(scene, css3dScene, tvMonitor, tvPosition, in
 
         css3dScene.add(css3dObject);
 
-        console.log(`YouTube iframe overlay ${index + 1} created and positioned on TV screen`);
-
         // Tambahkan ke array clickable overlays untuk interaksi klik
         clickableOverlays.push({
             css3dObject: css3dObject,
             element: wrapper,
             iframe: iframe,
-            youtubeUrl: tvPosition.youtubeUrl,
-            videoId: videoId
+            videoId: videoId,
+            position: css3dObject.position.clone(),
+            normal: new THREE.Vector3(0, 0, 1).applyEuler(css3dObject.rotation)
         });
     }
 }
@@ -172,21 +170,42 @@ function createYouTubeScreenOverlay(scene, css3dScene, tvMonitor, tvPosition, in
 // Fungsi untuk mengekstrak video ID dari URL YouTube
 function extractYouTubeVideoId(youtubeUrl) {
     if (!youtubeUrl) return null;
-    
+
     // Ekstrak video ID dari berbagai format URL YouTube
     const patterns = [
         /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
         /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^"&?\/\s]{11})/
     ];
-    
+
     for (const pattern of patterns) {
         const match = youtubeUrl.match(pattern);
         if (match && match[1]) {
             return match[1];
         }
     }
-    
+
     return null;
 }
+
+// Fungsi untuk memeriksa visibilitas overlay berdasarkan posisi kamera
+export const updateOverlayVisibility = (camera, overlays) => {
+    overlays.forEach(overlay => {
+        if (overlay.position && overlay.normal) {
+            // Hitung vektor dari overlay ke kamera
+            const cameraDirection = new THREE.Vector3().subVectors(camera.position, overlay.position).normalize();
+
+            // Hitung dot product untuk menentukan apakah kamera berada di depan overlay
+            const dotProduct = cameraDirection.dot(overlay.normal);
+
+            // Tambahkan tolerance kecil untuk menghindari flickering di edge cases
+            const tolerance = 0.1;
+            const isVisible = dotProduct > tolerance;
+
+            // Set visibility CSS3D object
+            overlay.css3dObject.visible = isVisible;
+            overlay.element.style.display = isVisible ? 'block' : 'none';
+        }
+    });
+};
 
 export { clickableOverlays };

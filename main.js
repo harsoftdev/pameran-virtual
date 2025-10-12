@@ -61,6 +61,43 @@ const textureLoader = new THREE.TextureLoader(manager);
 let camera, controls, renderer, css3dRenderer, css3dScene;
 
 (async () => {
+	// Ambil data exhibition untuk validasi dan YouTube links
+	let exhibitionData = null;
+	try {
+		const response = await fetch('https://silat.bekasikab.go.id/api/exhibitions');
+		const data = await response.json();
+		exhibitionData = data.data;
+	} catch (error) {
+		console.warn('Could not fetch exhibition data:', error);
+		// Jika gagal fetch, lanjutkan tanpa validasi
+	}
+
+	// Validasi berdasarkan is_periodic
+	if (exhibitionData && exhibitionData.is_periodic) {
+		const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+		const startDate = exhibitionData.start_date;
+		const endDate = exhibitionData.end_date;
+
+		if (currentDate < startDate) {
+			// Belum dimulai
+			document.getElementById("progress-container").style.display = "none";
+			document.getElementById("progress-text").textContent = "Pameran Virtual belum dimulai";
+			document.getElementById("progress-text").style.fontSize = "2em";
+			document.getElementById("progress-bar").style.display = "none";
+			document.getElementById("loader-logos").style.display = "block";
+			return; // Stop eksekusi
+		} else if (currentDate > endDate) {
+			// Sudah selesai
+			document.getElementById("progress-container").style.display = "none";
+			document.getElementById("progress-text").textContent = "Pameran Virtual Sudah Selesai";
+			document.getElementById("progress-text").style.fontSize = "2em";
+			document.getElementById("progress-bar").style.display = "none";
+			document.getElementById("loader-logos").style.display = "block";
+			return; // Stop eksekusi
+		}
+		// Jika dalam rentang, lanjutkan
+	}
+
 	// setup scene
 	({ camera, controls, renderer, css3dRenderer, css3dScene } = setupScene());
 
@@ -77,17 +114,7 @@ let camera, controls, renderer, css3dRenderer, css3dScene;
 	createPots(scene);
 	const [leftWindow, rightWindow] = createWindow(scene, textureLoader);
 	createSkyOutside(scene, [leftWindow, rightWindow], textureLoader);
-	
-	// Ambil data exhibition untuk YouTube links
-	let exhibitionData = null;
-	try {
-		const response = await fetch('https://silat.bekasikab.go.id/api/exhibitions');
-		const data = await response.json();
-		exhibitionData = data.data;
-	} catch (error) {
-		console.warn('Could not fetch exhibition data:', error);
-	}
-	
+
 	const tvMonitors = await createTvMonitor(scene, css3dScene, exhibitionData?.youtube_link_1, exhibitionData?.youtube_link_2);
 	// Tambahkan ambient + hemi light untuk penerangan seluruh ruangan
 	const ambient = new THREE.AmbientLight(0xffffff, 0.3);

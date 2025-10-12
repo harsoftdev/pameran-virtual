@@ -188,7 +188,9 @@ function extractYouTubeVideoId(youtubeUrl) {
 }
 
 // Fungsi untuk memeriksa visibilitas overlay berdasarkan posisi kamera
-export const updateOverlayVisibility = (camera, overlays) => {
+export const updateOverlayVisibility = (camera, overlays, scene) => {
+    const raycaster = new THREE.Raycaster();
+
     overlays.forEach(overlay => {
         if (overlay.position && overlay.normal) {
             // Hitung vektor dari overlay ke kamera
@@ -199,7 +201,33 @@ export const updateOverlayVisibility = (camera, overlays) => {
 
             // Tambahkan tolerance kecil untuk menghindari flickering di edge cases
             const tolerance = 0.1;
-            const isVisible = dotProduct > tolerance;
+            let isVisible = dotProduct > tolerance;
+
+            // Jika kamera di depan overlay, periksa occlusion dengan raycasting
+            if (isVisible) {
+                // Set raycaster dari kamera ke posisi overlay
+                raycaster.set(camera.position, overlay.position.clone().sub(camera.position).normalize());
+
+                // Cari objek yang terkena ray (kecuali overlay itu sendiri)
+                const intersects = raycaster.intersectObjects(scene.children, true);
+
+                // Filter out the overlay's own CSS3DObject if it's in the scene
+                const filteredIntersects = intersects.filter(intersect => {
+                    // Skip if it's the overlay's own object or very close to camera
+                    return intersect.distance > 0.1 && intersect.object !== overlay.css3dObject;
+                });
+
+                // Jika ada objek yang menghalangi (jarak lebih kecil dari jarak ke overlay), sembunyikan
+                if (filteredIntersects.length > 0) {
+                    const overlayDistance = camera.position.distanceTo(overlay.position);
+                    const closestIntersect = filteredIntersects[0];
+                    
+                    // Jika objek penghalang lebih dekat dari overlay, sembunyikan overlay
+                    if (closestIntersect.distance < overlayDistance - 0.5) { // tolerance 0.5 units
+                        isVisible = false;
+                    }
+                }
+            }
 
             // Set visibility CSS3D object
             overlay.css3dObject.visible = isVisible;

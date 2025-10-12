@@ -43,7 +43,7 @@ export const setupRendering = (
 		renderer.render(scene, camera);
 
 		// Update overlay visibility based on camera position and occlusion
-		updateOverlayVisibility(camera, clickableOverlays);
+		updateOverlayVisibility(camera, clickableOverlays, scene);
 
 		// Render CSS3D scene for iframe overlays
 		if (css3dRenderer && css3dScene) {

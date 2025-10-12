@@ -259,6 +259,15 @@ export const createMiddleWall = async (scene, textureLoader) => {
     );
     rightWallBox.rotation.y = Math.PI / 2; // Rotate +90 degrees to face right
 
+    // Back wall box - rotated to face back (-Z direction)
+    const backWallBox = await createFramedBox(
+        wallGroup,
+        { x: 0, y: wallHeight / 2 - 3, z: -wallDepth / 2 - 0.1 }, // Position at the back of the middle wall
+        { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
+        `${basePath}images/bupati.png`
+    );
+    backWallBox.rotation.y = Math.PI; // Rotate 180 degrees to face back
+
     return wallGroup;
 };
 

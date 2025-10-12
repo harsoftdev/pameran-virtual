@@ -44,6 +44,7 @@ export const setupEventListeners = (controls, camera, scene, renderer) => {
 	});
 
 	controls.addEventListener("unlock", () => {
+		lockPointer = false; // Pastikan state lokal selalu sinkron
 		updatePointerLockStatus(false); // Update status click handling
 
 		// Jika unlock dipicu oleh ESC, jangan lakukan apapun
@@ -60,6 +61,7 @@ export const setupEventListeners = (controls, camera, scene, renderer) => {
 	});
 
 	controls.addEventListener("lock", () => {
+		lockPointer = true; // Pastikan state lokal selalu sinkron
 		updatePointerLockStatus(true); // Update status click handling
 	});
 };
@@ -69,6 +71,15 @@ function onKeyDown(event, controls) {
 	if (event.key in keysPressed) {
 		// check if the key pressed by the user is in the keysPressed object
 		keysPressed[event.key] = true; // if yes, set the value of the key pressed to true
+	}
+
+	// Handle WASD button visual feedback
+	const key = event.key.toLowerCase();
+	if (["w", "a", "s", "d"].includes(key)) {
+		const button = document.getElementById(`${key}-button`);
+		if (button) {
+			button.classList.add("pressed");
+		}
 	}
 
 	if (event.key === "Escape" || event.key === "e") {
@@ -101,12 +112,18 @@ function onKeyDown(event, controls) {
 
 	if (event.key === " ") {
 		// SPASI = Toggle pointer lock saja (tidak ke menu)
-		if (lockPointer) {
+		event.preventDefault(); // Prevent browser default scroll behavior
+		
+		// Gunakan state aktual dari document.pointerLockElement untuk akurasi
+		const currentlyLocked = !!document.pointerLockElement;
+		
+		if (currentlyLocked) {
 			controls.unlock(); // unlock the pointer
+			lockPointer = false;
 		} else {
 			controls.lock(); // lock the pointer
+			lockPointer = true;
 		}
-		lockPointer = !lockPointer; // toggle the lockPointer variable
 
 		const button = document.getElementById(`space-button`);
 		if (button) {
@@ -128,16 +145,8 @@ function onKeyDown(event, controls) {
 		location.reload(); // reload the page
 	}
 
-	// Perbaiki logika untuk tombol A, S, W, D
-	document.addEventListener("keydown", (event) => {
-		const key = event.key.toLowerCase();
-		if (["w", "a", "s", "d"].includes(key)) {
-			const button = document.getElementById(`${key}-button`);
-			if (button) {
-				button.classList.add("pressed");
-			}
-		}
-	});
+	// Perbaiki logika untuk tombol A, S, W, D - pindahkan ke dalam onKeyDown function
+	// untuk menghindari konflik event listener
 
 	document.addEventListener("keyup", (event) => {
 		const key = event.key.toLowerCase();

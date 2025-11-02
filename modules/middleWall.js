@@ -297,104 +297,129 @@ export const createTitleBox = async (scene) => {
     canvas.height = 2048; // Power of 2 dimensions for optimal texture rendering
     const ctx = canvas.getContext('2d');
 
-    // Use reusable wood frame component (original size)
-    const frameWidth = 120; // Original frame width
-    drawWoodFrame(ctx, canvas, frameWidth);
+    // // Use reusable wood frame component (original size)
+    // const frameWidth = 120; // Original frame width
+    // drawWoodFrame(ctx, canvas, frameWidth);
 
-    ctx.font = 'bold 224px Arial'; // Scaled up for new canvas size
-    ctx.fillStyle = 'black';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    // // ctx.font = 'bold 224px Arial'; // Scaled up for new canvas size
+    // // ctx.fillStyle = 'black';
+    // // ctx.textAlign = 'center';
+    // // ctx.textBaseline = 'middle';
 
-    // Auto-wrap text to fit within white content area
-    const text = data.data.title || 'Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi';
-    const maxWidth = canvas.width - (frameWidth * 2) - 60; // Available width minus frame and smaller margins
-    const lineHeight = 292; // Scaled up proportionally
+    // // Auto-wrap text to fit within white content area
+    // // const text = data.data.title || 'Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi';
+    // // const maxWidth = canvas.width - (frameWidth * 2) - 60; // Available width minus frame and smaller margins
+    // // const lineHeight = 292; // Scaled up proportionally
 
-    // Function to wrap text
-    function wrapText(context, text, maxWidth, fontSize) {
-        const words = text.split(' ');
-        const lines = [];
-        let currentLine = '';
+    // // Function to wrap text
+    // // function wrapText(context, text, maxWidth, fontSize) {
+    // //     const words = text.split(' ');
+    // //     const lines = [];
+    // //     const currentLine = '';
 
-        // Temporarily set font to measure text
-        const originalFont = context.font;
-        context.font = `bold ${fontSize}px Arial`;
+    // //     // Temporarily set font to measure text
+    // //     const originalFont = context.font;
+    // //     context.font = `bold ${fontSize}px Arial`;
 
-        words.forEach(word => {
-            const testLine = currentLine + (currentLine ? ' ' : '') + word;
-            const metrics = context.measureText(testLine);
+    // //     words.forEach(word => {
+    // //         const testLine = currentLine + (currentLine ? ' ' : '') + word;
+    // //         const metrics = context.measureText(testLine);
 
-            if (metrics.width > maxWidth && currentLine) {
-                lines.push(currentLine);
-                currentLine = word;
-            } else {
-                currentLine = testLine;
-            }
-        });
+    // //         if (metrics.width > maxWidth && currentLine) {
+    // //             lines.push(currentLine);
+    // //             currentLine = word;
+    // //         } else {
+    // //             currentLine = testLine;
+    // //         }
+    // //     });
 
-        if (currentLine) {
-            lines.push(currentLine);
+    // //     if (currentLine) {
+    // //         lines.push(currentLine);
+    // //     }
+
+    // //     // Restore original font
+    // //     context.font = originalFont;
+    // //     return lines;
+    // // }
+
+    // // Get wrapped lines
+    // // const lines = wrapText(ctx, text, maxWidth, 224);
+    // // const totalTextHeight = lines.length * lineHeight;
+    // // const startY = canvas.height / 2 - totalTextHeight / 2; // Center vertically
+
+    // // Draw each line
+    // // lines.forEach((line, index) => {
+    // //     ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
+    // // });
+
+    // Load and draw title image from API
+    const titleImageUrl = data.data.title_image;
+    if (titleImageUrl) {
+        try {
+            const image = await loadImage(titleImageUrl);
+            // Scale image to fit the full canvas
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        } catch (error) {
+            console.warn('Could not load title image:', error);
+            // Fallback: draw default text if image fails
+            ctx.font = 'bold 224px Arial';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi', canvas.width / 2, canvas.height / 2);
         }
-
-        // Restore original font
-        context.font = originalFont;
-        return lines;
+    } else {
+        // Fallback if no title_image
+        ctx.font = 'bold 224px Arial';
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(data.data.title || 'Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi', canvas.width / 2, canvas.height / 2);
     }
 
-    // Get wrapped lines
-    const lines = wrapText(ctx, text, maxWidth, 224);
-    const totalTextHeight = lines.length * lineHeight;
-    const startY = canvas.height / 2 - totalTextHeight / 2; // Center vertically
+    // // Load and draw logos at the bottom
+    // // const basePath = import.meta.env.BASE_URL;
 
-    // Draw each line
-    lines.forEach((line, index) => {
-        ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
-    });
+    // // Create promises for image loading
+    // // const loadImage = (src) => {
+    // //     return new Promise((resolve) => {
+    // //         const img = new Image();
+    // //         img.onload = () => resolve(img);
+    // //         img.onerror = () => {
+    // //             console.warn(`Failed to load image: ${src}`);
+    // //             resolve(null); // Return null instead of rejecting
+    // //         };
+    // //         img.src = src;
+    // //     });
+    // // };
 
-    // Load and draw logos at the bottom
-    const basePath = import.meta.env.BASE_URL;
+    // // Load both logos and draw them
+    // // try {
+    // //     const logo1 = await loadImage(`${basePath}images/logo/bekasi.png`);
+    // //     const logo2 = await loadImage(`${basePath}images/logo/disarpus.png`);
 
-    // Create promises for image loading
-    const loadImage = (src) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => {
-                console.warn(`Failed to load image: ${src}`);
-                resolve(null); // Return null instead of rejecting
-            };
-            img.src = src;
-        });
-    };
+    // //     // Draw logos at the bottom with higher resolution, positioned for rectangular format and frame
+    // //     const bekasiLogoSize = 400; // Smaller size as requested
+    // //     const disarpusLogoWidth = 600; // Wider Disarpus logo
+    // //     const disarpusLogoHeight = 480; // Slightly shorter height for wider appearance
 
-    // Load both logos and draw them
-    try {
-        const logo1 = await loadImage(`${basePath}images/logo/bekasi.png`);
-        const logo2 = await loadImage(`${basePath}images/logo/disarpus.png`);
+    // //     // Only draw logos if they loaded successfully
+    // //     if (logo1) {
+    // //         // Position Bekasi logo (left side) - smaller size as requested
+    // //         const bekasiX = frameWidth + 40; // Adjusted position for smaller frame
+    // //         const bekasiY = canvas.height - frameWidth - bekasiLogoSize - 40;
+    // //         ctx.drawImage(logo1, bekasiX, bekasiY, bekasiLogoSize, bekasiLogoSize);
+    // //     }
 
-        // Draw logos at the bottom with higher resolution, positioned for rectangular format and frame
-        const bekasiLogoSize = 400; // Smaller size as requested
-        const disarpusLogoWidth = 600; // Wider Disarpus logo
-        const disarpusLogoHeight = 480; // Slightly shorter height for wider appearance
-
-        // Only draw logos if they loaded successfully
-        if (logo1) {
-            // Position Bekasi logo (left side) - smaller size as requested
-            const bekasiX = frameWidth + 40; // Adjusted position for smaller frame
-            const bekasiY = canvas.height - frameWidth - bekasiLogoSize - 40;
-            ctx.drawImage(logo1, bekasiX, bekasiY, bekasiLogoSize, bekasiLogoSize);
-        }
-
-        if (logo2) {
-            // Position Disarpus logo (right side) - wider format as requested
-            const disarpusX = canvas.width - frameWidth - disarpusLogoWidth - 40;
-            const disarpusY = canvas.height - frameWidth - disarpusLogoHeight - 40;
-            ctx.drawImage(logo2, disarpusX, disarpusY, disarpusLogoWidth, disarpusLogoHeight);
-        }
-    } catch (error) {
-        console.warn('Could not load logos:', error);
-    }
+    // //     if (logo2) {
+    // //         // Position Disarpus logo (right side) - wider format as requested
+    // //         const disarpusX = canvas.width - frameWidth - disarpusLogoWidth - 40;
+    // //         const disarpusY = canvas.height - frameWidth - disarpusLogoHeight - 40;
+    // //         ctx.drawImage(logo2, disarpusX, disarpusY, disarpusLogoWidth, disarpusLogoHeight);
+    // //     }
+    // // } catch (error) {
+    // //     console.warn('Could not load logos:', error);
+    // // }
 
     const texture = new THREE.CanvasTexture(canvas);
 

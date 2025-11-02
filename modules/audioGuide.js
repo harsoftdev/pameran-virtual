@@ -1,5 +1,9 @@
 import * as THREE from "three";
 
+const API_URL = 'https://silat.bekasikab.go.id/api/exhibitions';
+const res = await fetch(API_URL);
+const data = await res.json();
+
 let sound;
 let bufferLoaded = false; // flag to track if audio buffer is loaded
 let audioPlaying = false; // flag to track if audio is currently playing
@@ -13,13 +17,41 @@ export const setupAudio = (camera) => {
     sound = new THREE.Audio(listener); // creating the audio source
 
     const audioLoader = new THREE.AudioLoader(); // create an audio loader
-    audioLoader.load("sounds/Hymne_Kabupaten_Bekasi.mp3", function (buffer) {
+    
+    // Get backsound URL from API or fallback to default
+    const backsoundUrl = data.data.backsound || "sounds/Hymne_Kabupaten_Bekasi.mp3";
+    
+    audioLoader.load(backsoundUrl, function (buffer) {
         // load the audio file
         sound.setBuffer(buffer); // set the audio source buffer
         sound.setLoop(true); // set the audio source to loop
         sound.setVolume(0.8); // increased volume for better audibility
         bufferLoaded = true; // set bufferLoaded flag to true once the audio buffer is loaded
+        console.log("Audio loaded from:", backsoundUrl);
+    }, function (progress) {
+        console.log("Audio loading progress:", progress);
+    }, function (error) {
+        console.warn("Failed to load audio from API, trying fallback:", error);
+        // Fallback to default audio if API audio fails
+        audioLoader.load("sounds/Hymne_Kabupaten_Bekasi.mp3", function (buffer) {
+            sound.setBuffer(buffer);
+            sound.setLoop(true);
+            sound.setVolume(0.8);
+            bufferLoaded = true;
+            console.log("Fallback audio loaded");
+        }, null, function (fallbackError) {
+            console.error("Failed to load both API and fallback audio:", fallbackError);
+        });
     });
+
+    // // Original code (commented out) - load from static file
+    // // audioLoader.load("sounds/Hymne_Kabupaten_Bekasi.mp3", function (buffer) {
+    // //     // load the audio file
+    // //     sound.setBuffer(buffer); // set the audio source buffer
+    // //     sound.setLoop(true); // set the audio source to loop
+    // //     sound.setVolume(0.8); // increased volume for better audibility
+    // //     bufferLoaded = true; // set bufferLoaded flag to true once the audio buffer is loaded
+    // // });
 };
 
 // play audio

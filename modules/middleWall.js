@@ -150,6 +150,73 @@ export const createFramedBox = async (parentGroup, position, boxSize, frameImage
     return box;
 };
 
+// Reusable plain box component (without frame and white background)
+export const createPlainBox = async (parentGroup, position, boxSize, imagePath = null) => {
+    const { x, y, z } = position;
+    const { width, height, depth } = boxSize;
+
+    const boxMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: false
+    });
+    const box = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        boxMaterial
+    );
+    box.position.set(x, y, z); // Position as specified
+    parentGroup.add(box);
+
+    // Create canvas for the content
+    const canvas = document.createElement('canvas');
+    canvas.width = 4096;
+    canvas.height = 2048;
+    const ctx = canvas.getContext('2d');
+
+    // // White background (commented out)
+    // // ctx.fillStyle = 'white';
+    // // ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // // Draw wood frame (commented out)
+    // // const frameWidth = 120;
+    // // drawWoodFrame(ctx, canvas, frameWidth);
+
+    // Load and draw image if provided
+    if (imagePath) {
+        try {
+            const image = await loadImage(imagePath);
+            // Scale image to fit the full canvas
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        } catch (error) {
+            console.warn('Could not load image:', error);
+            // Draw fallback content when image fails to load
+            ctx.font = 'bold 128px Arial';
+            ctx.fillStyle = '#666666';
+            ctx.textAlign = 'center';
+            ctx.fillText('No Image Available', canvas.width / 2, canvas.height / 2);
+        }
+    }
+    
+    // Create texture and apply to box
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.NearestFilter;
+    texture.magFilter = THREE.NearestFilter;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    const planeMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        side: THREE.DoubleSide
+    });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), planeMaterial);
+
+    // Position plane at the front face of the box (works for all rotations)
+    plane.position.set(0, 0, depth / 2 + 0.01);
+    box.add(plane);
+
+    return box;
+};
+
 export const createMiddleWall = async (scene, textureLoader) => {
     const wallGroup = new THREE.Group();
     scene.add(wallGroup);
@@ -189,6 +256,7 @@ export const createMiddleWall = async (scene, textureLoader) => {
 
     const frameImagePath1 = await getFrameImage(data.data.quotes_image_1);
     const frameImagePath2 = await getFrameImage(data.data.quotes_image_2);
+    const frameImagePath3 = await getFrameImage(data.data.bupati_image);
 
     const normalTexture = textureLoader.load(
         "leather_white_4k.gltf/textures/leather_white_diff_4k.jpg"
@@ -242,7 +310,7 @@ export const createMiddleWall = async (scene, textureLoader) => {
     const sideBoxHeight = 8; // Same height as front banner
 
     // Left wall box - rotated to face left (-X direction)
-    const leftWallBox = await createFramedBox(
+    const leftWallBox = await createPlainBox(
         wallGroup,
         { x: -wallWidth / 2 - 0.1, y: wallHeight / 2 - 3, z: 0 }, // Much closer to wall and raised position
         { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
@@ -251,7 +319,7 @@ export const createMiddleWall = async (scene, textureLoader) => {
     leftWallBox.rotation.y = -Math.PI / 2; // Rotate -90 degrees to face left
 
     // Right wall box - rotated to face right (+X direction)
-    const rightWallBox = await createFramedBox(
+    const rightWallBox = await createPlainBox(
         wallGroup,
         { x: wallWidth / 2 + 0.1, y: wallHeight / 2 - 3, z: 0 }, // Much closer to wall and raised position
         { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
@@ -260,11 +328,11 @@ export const createMiddleWall = async (scene, textureLoader) => {
     rightWallBox.rotation.y = Math.PI / 2; // Rotate +90 degrees to face right
 
     // Back wall box - rotated to face back (-Z direction)
-    const backWallBox = await createFramedBox(
+    const backWallBox = await createPlainBox(
         wallGroup,
         { x: 0, y: wallHeight / 2 - 3, z: -wallDepth / 2 - 0.1 }, // Position at the back of the middle wall
         { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
-        `${basePath}images/bupati.png`
+        frameImagePath3
     );
     backWallBox.rotation.y = Math.PI; // Rotate 180 degrees to face back
 

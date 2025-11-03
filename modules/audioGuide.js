@@ -27,21 +27,6 @@ export const setupAudio = (camera) => {
         sound.setLoop(true); // set the audio source to loop
         sound.setVolume(0.8); // increased volume for better audibility
         bufferLoaded = true; // set bufferLoaded flag to true once the audio buffer is loaded
-        console.log("Audio loaded from:", backsoundUrl);
-    }, function (progress) {
-        console.log("Audio loading progress:", progress);
-    }, function (error) {
-        console.warn("Failed to load audio from API, trying fallback:", error);
-        // Fallback to default audio if API audio fails
-        audioLoader.load("sounds/Hymne_Kabupaten_Bekasi.mp3", function (buffer) {
-            sound.setBuffer(buffer);
-            sound.setLoop(true);
-            sound.setVolume(0.8);
-            bufferLoaded = true;
-            console.log("Fallback audio loaded");
-        }, null, function (fallbackError) {
-            console.error("Failed to load both API and fallback audio:", fallbackError);
-        });
     });
 
     // // Original code (commented out) - load from static file

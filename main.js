@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { scene, setupScene } from "./modules/scene.js";
 import { createPaintings } from "./modules/paintings.js";
-import { createDoor, createSkyBehindDoor, createSkyOutside, createWalls, createWindow } from "./modules/walls.js";
+import { createDoor, createSkyOutside, createWalls, createWindow } from "./modules/walls.js";
 import { setupFloor } from "./modules/floor.js";
 import { createCeiling } from "./modules/ceiling.js";
 import { createBoundingBoxes } from "./modules/boundingBox.js";
@@ -109,8 +109,7 @@ let camera, controls, renderer, css3dRenderer, css3dScene;
 	setupFloor(scene);
 	const furniture = await createFurniture(scene);
 	createCeiling(scene, textureLoader);
-	const door = createDoor(scene, textureLoader);
-	createSkyBehindDoor(scene, door, textureLoader);
+	createDoor(scene, textureLoader);
 	createPots(scene);
 	const [leftWindow, rightWindow] = createWindow(scene, textureLoader);
 	createSkyOutside(scene, [leftWindow, rightWindow], textureLoader);

@@ -61,7 +61,11 @@ export function createWalls(scene, textureLoader) {
 
 export const createDoor = (scene, textureLoader) => {
 	const doorTexture = textureLoader.load('images/door.png');
-	const doorGeometry = new THREE.PlaneGeometry(5, 10);
+	// Adjust aspect ratio to 4:3 to make it less wide
+	const imageAspectRatio = 4 / 3;
+	const doorHeight = 13; // Reduced height to make it sit lower
+	const doorWidth = doorHeight * imageAspectRatio;
+	const doorGeometry = new THREE.PlaneGeometry(doorWidth, doorHeight);
 	const doorMaterial = new THREE.MeshStandardMaterial({
 		map: doorTexture,
 		side: THREE.DoubleSide,
@@ -72,9 +76,7 @@ export const createDoor = (scene, textureLoader) => {
 	const door = new THREE.Mesh(doorGeometry, doorMaterial);
 	door.renderOrder = 1;
 
-	const floorY = 0;
-	const doorHeight = 10; // sesuaikan dengan geometry
-	door.position.y = floorY + doorHeight / 2; // tengah pintu
+	door.position.y = 6; // Lower the door slightly below floor level for better visual attachment
 	door.position.z = 40 - 0.05;
 	door.rotation.y = Math.PI;
 
@@ -115,35 +117,15 @@ export const createWindow = (scene, textureLoader) => {
 	return [leftWindow, rightWindow];
 };
 
-export const createSkyBehindDoor = (scene, doorMesh, textureLoader) => {
-	const skyTexture = textureLoader.load('images/clouds-sky.jpg');
-	const { width, height } = doorMesh.geometry.parameters;
-	const skyGeometry = new THREE.PlaneGeometry(width, height);
-	skyGeometry.scale(0.85, 0.85, 1);
-	const skyMaterial = new THREE.MeshStandardMaterial({
-		map: skyTexture,
-		transparent: true,
-		side: THREE.DoubleSide,
-	});
-
-	const skyMesh = new THREE.Mesh(skyGeometry, skyMaterial);
-	skyMesh.position.copy(doorMesh.position);
-	skyMesh.position.z = doorMesh.position.z + 0.01;
-	skyMesh.rotation.copy(doorMesh.rotation);
-	skyMesh.renderOrder = 0;
-
-	scene.add(skyMesh);
-	return skyMesh;
-};
-
 export const createSkyOutside = (scene, windowMeshes, textureLoader) => {
-	const skyTexture = textureLoader.load('images/clouds-sky.jpg');
+	const skyTexture = textureLoader.load('images/background-window.jpg');
 	return windowMeshes.map((win) => {
 		const { width, height } = win.geometry.parameters;
 		const skyGeometry = new THREE.PlaneGeometry(width, height);
 		skyGeometry.scale(0.75, 0.75, 1);
 		const skyMaterial = new THREE.MeshStandardMaterial({
 			map: skyTexture,
+			color: new THREE.Color(2.5, 2.5, 2.5), // Increase brightness to match window
 			transparent: true,
 			side: THREE.DoubleSide,
 		});

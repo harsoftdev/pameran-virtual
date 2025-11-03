@@ -34,7 +34,7 @@ export const setupFloor = (scene) => {
 		normalMap: normalTexture,
 		roughnessMap: roughnessTexture,
 		aoMap: aoTexture,
-		displacementScale: 0.1,
+		// displacementScale: 0.1,
 		side: THREE.DoubleSide,
 	});
 

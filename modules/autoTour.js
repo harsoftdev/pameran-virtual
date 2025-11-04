@@ -11,10 +11,73 @@ let controls = null;
 // Durasi untuk transisi kamera
 const TRANSITION_DURATION = 2000;
 
+// Function to sort paintings by wall position for optimal tour flow
+const sortPaintingsByWallPosition = (paintingsArray) => {
+    const sortedPaintings = [...paintingsArray];
+    
+    // Group paintings by wall based on rotation
+    const leftWall = [];
+    const frontWall = [];
+    const rightWall = [];
+    
+    sortedPaintings.forEach(painting => {
+        const rotation = painting.rotation.y;
+        
+        if (Math.abs(rotation - Math.PI/2) < 0.1) {
+            // Left wall (rotation ~π/2)
+            leftWall.push(painting);
+        } else if (Math.abs(rotation) < 0.1) {
+            // Front wall (rotation ~0)
+            frontWall.push(painting);
+        } else if (Math.abs(rotation + Math.PI/2) < 0.1) {
+            // Right wall (rotation ~-π/2)
+            rightWall.push(painting);
+        }
+    });
+    
+    // Sort each wall by position (left to right for front wall, top to bottom for side walls)
+    leftWall.sort((a, b) => {
+        const posA = new THREE.Vector3();
+        const posB = new THREE.Vector3();
+        a.getWorldPosition(posA);
+        b.getWorldPosition(posB);
+        return posA.z - posB.z; // Sort by z position for left wall
+    });
+    
+    frontWall.sort((a, b) => {
+        const posA = new THREE.Vector3();
+        const posB = new THREE.Vector3();
+        a.getWorldPosition(posA);
+        b.getWorldPosition(posB);
+        return posA.x - posB.x; // Sort by x position for front wall
+    });
+    
+    rightWall.sort((a, b) => {
+        const posA = new THREE.Vector3();
+        const posB = new THREE.Vector3();
+        a.getWorldPosition(posA);
+        b.getWorldPosition(posB);
+        return posB.z - posA.z; // Sort by z position for right wall (reverse order)
+    });
+    
+    // Combine in order: left → front → right
+    const orderedPaintings = [...leftWall, ...frontWall, ...rightWall];
+    
+    console.log('Paintings sorted by walls:');
+    console.log('Left wall:', leftWall.length, 'paintings');
+    console.log('Front wall:', frontWall.length, 'paintings');
+    console.log('Right wall:', rightWall.length, 'paintings');
+    
+    return orderedPaintings;
+};
+
 export const initAutoTour = (paintingsArray, cameraRef, controlsRef) => {
-    paintings = paintingsArray;
+    // Sort paintings by wall position: left → front → right
+    paintings = sortPaintingsByWallPosition(paintingsArray);
     camera = cameraRef;
     controls = controlsRef;
+    
+    console.log('Auto tour initialized with sorted paintings:', paintings.length);
 };
 
 export const startGuidedTour = () => {
@@ -213,19 +276,21 @@ const showPaintingInfo = (painting) => {
         infoElement.classList.remove('locked');
         console.log('Removed locked class');
         
-        // Force show the element immediately with proper mobile centering
+        // Force show the element immediately with proper responsive centering
         infoElement.style.display = 'block';
         infoElement.style.opacity = '1';
         
-        // Check if mobile for proper transform
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
+        // Check screen size for proper transform
+        const screenWidth = window.innerWidth;
+        if (screenWidth <= 1024) {
+            // Mobile, tablet, and small laptop - center horizontally
             infoElement.style.transform = 'translateX(-50%) translateY(0)';
         } else {
+            // Desktop - normal positioning
             infoElement.style.transform = 'translateY(0)';
         }
         
-        console.log('Applied inline styles for immediate visibility');
+        console.log('Applied inline styles for immediate visibility, screen width:', screenWidth);
     }
     
     // Use the existing displayPaintingInfo function from paintingInfo.js

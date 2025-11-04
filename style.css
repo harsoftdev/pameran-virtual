@@ -519,18 +519,105 @@ canvas.loaded {
     }
     
     .nav-container {
-        flex-direction: column;
-        gap: 10px;
-        padding: 15px;
+        flex-direction: row !important;
+        gap: 8px;
+        padding: 8px 12px;
+        transform: scale(0.9);
     }
     
     .nav-button {
-        width: 100%;
-        padding: 12px 20px;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        min-width: auto;
+        white-space: nowrap;
+    }
+    
+    .nav-button span {
+        font-size: 11px;
     }
     
     .nav-info {
-        order: -1; /* Put counter at top */
-        margin-bottom: 10px;
+        order: 0 !important;
+        margin-bottom: 0 !important;
+        font-size: 14px !important;
+        padding: 0 8px !important;
+        min-width: 60px;
+    }
+    
+    /* Extra small popup adjustments */
+    #painting-info {
+        width: 95% !important;
+        max-width: 300px !important;
+        left: 50% !important;
+        right: auto !important;
+        top: 10px !important;
+        transform: translateX(-50%) translateY(100px) !important;
+        padding: 15px !important;
+        font-size: 0.9em !important;
+    }
+    
+    #painting-info.show {
+        transform: translateX(-50%) translateY(0) !important;
+    }
+}
+
+/* Very small screens (320px and below) */
+@media screen and (max-width: 320px) {
+    #painting-info {
+        width: 98% !important;
+        max-width: 280px !important;
+        padding: 12px !important;
+        font-size: 0.8em !important;
+    }
+    
+    #painting-info h3 {
+        font-size: 1.1em !important;
+    }
+    
+    #painting-info p {
+        font-size: 1em !important;
+    }
+    
+    /* Extra compact navigation for very small screens */
+    .nav-container {
+        transform: scale(0.8) !important;
+        gap: 6px !important;
+        padding: 6px 8px !important;
+    }
+    
+    .nav-button {
+        padding: 6px 8px !important;
+        font-size: 10px !important;
+    }
+    
+    .nav-button span {
+        font-size: 9px !important;
+    }
+    
+    .nav-info {
+        font-size: 12px !important;
+        padding: 0 6px !important;
+        min-width: 50px !important;
+    }
+}
+
+/* Medium tablets (481px to 768px) */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+    #painting-info {
+        width: 85% !important;
+        max-width: 400px !important;
+    }
+}
+
+/* Large tablets and small laptops (769px to 1024px) */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    #painting-info {
+        width: 350px !important;
+        left: 20px !important;
+        transform: translateY(100px) !important;
+    }
+    
+    #painting-info.show {
+        transform: translateY(0) !important;
     }
 }

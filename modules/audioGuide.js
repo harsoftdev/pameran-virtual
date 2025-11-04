@@ -1,15 +1,32 @@
 import * as THREE from "three";
 
 const API_URL = 'https://silat.bekasikab.go.id/api/exhibitions';
-const res = await fetch(API_URL);
-const data = await res.json();
-
+let exhibitionData = null;
 let sound;
 let bufferLoaded = false; // flag to track if audio buffer is loaded
 let audioPlaying = false; // flag to track if audio is currently playing
 
+// Fetch exhibition data
+const fetchExhibitionData = async () => {
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        exhibitionData = data;
+        return data;
+    } catch (error) {
+        console.warn('Could not fetch exhibition data for audio:', error);
+        exhibitionData = { data: {} }; // fallback empty data
+        return exhibitionData;
+    }
+};
+
 // setup audio for the scene
-export const setupAudio = (camera) => {
+export const setupAudio = async (camera) => {
+    // Fetch exhibition data first if not already loaded
+    if (!exhibitionData) {
+        await fetchExhibitionData();
+    }
+
     // create an audio listener and add it to the camera
     const listener = new THREE.AudioListener();
     camera.add(listener);
@@ -19,7 +36,7 @@ export const setupAudio = (camera) => {
     const audioLoader = new THREE.AudioLoader(); // create an audio loader
     
     // Get backsound URL from API or fallback to default
-    const backsoundUrl = data.data.backsound || "sounds/Hymne_Kabupaten_Bekasi.mp3";
+    const backsoundUrl = exhibitionData?.data?.backsound || "sounds/Hymne_Kabupaten_Bekasi.mp3";
     
     audioLoader.load(backsoundUrl, function (buffer) {
         // load the audio file

@@ -13,6 +13,7 @@ import { clickHandling, updatePointerLockStatus } from "./modules/clickHandling.
 import { createFurniture, createPots, createTvMonitor } from "./modules/furniture.js";
 import { createMiddleWall, createTitleBox } from "./modules/middleWall.js";
 import { setupAudio, startAudio } from "./modules/audioGuide.js";
+import { initAutoTour, setupAutoTourButton } from "./modules/autoTour.js";
 
 // === LOADING MANAGER SETUP ===
 const manager = new THREE.LoadingManager();
@@ -102,7 +103,7 @@ let camera, controls, renderer, css3dRenderer, css3dScene;
 	({ camera, controls, renderer, css3dRenderer, css3dScene } = setupScene());
 
 	// setup audio
-	setupAudio(camera);
+	await setupAudio(camera);
 	// bikin objek scene
 	const walls = createWalls(scene, textureLoader);
 	const middleWalls = await createMiddleWall(scene, textureLoader);
@@ -139,6 +140,8 @@ let camera, controls, renderer, css3dRenderer, css3dScene;
 
 	// setup controls & event
 	setupPlayButton(controls);
+	setupAutoTourButton(controls);
+	initAutoTour(paintings, camera, controls);
 	setupEventListeners(controls, camera, scene, renderer);
 	clickHandling(renderer, camera, paintings);
 	setupRendering(scene, camera, renderer, paintings, controls, allWalls, css3dRenderer, css3dScene);

@@ -2,6 +2,7 @@ import { keysPressed } from "./movement.js"; // import the keysPressed object
 import { showMenu, hideMenu, hideControls, showConstrols } from "./menu.js"; // import the showMenu function
 import { updatePointerLockStatus } from "./clickHandling.js"; // import untuk update pointer lock status
 import { toggleAudio } from "./audioGuide.js";
+import { handleUserInteraction } from "./autoTour.js";
 import * as THREE from "three";
 
 let lockPointer = false; // Awalnya pointer belum terkunci

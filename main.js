@@ -61,6 +61,53 @@ const textureLoader = new THREE.TextureLoader(manager);
 
 let camera, controls, renderer, css3dRenderer, css3dScene;
 
+// Function to track visitor
+const trackVisitor = async () => {
+	try {
+		// Get user's IP address from external service
+		let ipAddress = null;
+		try {
+			const ipResponse = await fetch('https://api.ipify.org?format=json');
+			const ipData = await ipResponse.json();
+			ipAddress = ipData.ip;
+		} catch (ipError) {
+			console.warn('Could not get IP address:', ipError);
+			// Continue without IP if service fails
+		}
+
+		// Get user agent
+		const userAgent = navigator.userAgent;
+		
+		// Prepare payload
+		const payload = {
+			user_agent: userAgent
+		};
+		
+		// Add IP address if successfully retrieved
+		if (ipAddress) {
+			payload.ip_address = ipAddress;
+		}
+		
+		// Send tracking data to API
+		const response = await fetch('https://silat.bekasikab.go.id/api/exhibition/track', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (response.ok) {
+			console.log('Visitor tracking successful', ipAddress ? `(IP: ${ipAddress})` : '(no IP)');
+		} else {
+			console.warn('Visitor tracking failed:', response.status);
+		}
+	} catch (error) {
+		console.warn('Visitor tracking error:', error);
+		// Don't stop execution if tracking fails
+	}
+};
+
 (async () => {
 	// Ambil data exhibition untuk validasi dan YouTube links
 	let exhibitionData = null;
@@ -97,6 +144,11 @@ let camera, controls, renderer, css3dRenderer, css3dScene;
 			return; // Stop eksekusi
 		}
 		// Jika dalam rentang, lanjutkan
+	}
+
+	// Track visitor - only if exhibition is valid and active
+	if (exhibitionData && exhibitionData.is_periodic) {
+		await trackVisitor();
 	}
 
 	// setup scene

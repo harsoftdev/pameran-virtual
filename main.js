@@ -19,13 +19,15 @@ import { initAutoTour, setupAutoTourButton } from "./modules/autoTour.js";
 const manager = new THREE.LoadingManager();
 
 const startTime = Date.now();
+let maxPercent = 0;
 
 // Update progress bar setiap kali ada asset di-load
 manager.onProgress = function (url, itemsLoaded, itemsTotal) {
 	const percent = (itemsLoaded / itemsTotal) * 100;
-	document.getElementById("progress-bar").style.width = percent + "%";
+	maxPercent = Math.max(maxPercent, percent);
+	document.getElementById("progress-bar").style.width = maxPercent + "%";
 	document.getElementById("progress-text").textContent =
-		// `Memuat Pameran Virtual... ${Math.round(percent)}%`;
+		// `Memuat Pameran Virtual... ${Math.round(maxPercent)}%`;
 		`Memuat Pameran Virtual...`;
 };
 
@@ -175,7 +177,7 @@ const trackVisitor = async () => {
 	hemiLight.position.set(0, 20, 0);
 	scene.add(hemiLight);
 
-	const paintings = await createPaintings(scene, textureLoader);
+	const paintings = await createPaintings(scene, textureLoader, manager);
 
 	// bounding box
 	createBoundingBoxes(walls);

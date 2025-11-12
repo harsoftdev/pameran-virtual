@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.js', import.meta.url).toString();
 
-export async function createPaintings(scene, textureLoader) {
+export async function createPaintings(scene, textureLoader, manager) {
 	let paintings = [];
 
 	const API_URL = 'https://silat.bekasikab.go.id/api/exhibition-archives';
@@ -38,7 +38,7 @@ export async function createPaintings(scene, textureLoader) {
 		const start = -usable / 2 + spacing / 2;
 
 		for (let i = 0; i < frontWall.length; i++) {
-			const painting = await createPaintingMesh(frontWall[i], textureLoader);
+			const painting = await createPaintingMesh(frontWall[i], textureLoader, manager);
 			painting.position.set(start + spacing * i, paintingOffsetY, -39.5);
 			painting.rotation.y = 0;
 			painting.userData.category = 'static';
@@ -83,7 +83,7 @@ export async function createPaintings(scene, textureLoader) {
 		const start = -usable / 2 + spacing / 2;
 
 		for (let i = 0; i < leftWall.length; i++) {
-			const painting = await createPaintingMesh(leftWall[i], textureLoader);
+			const painting = await createPaintingMesh(leftWall[i], textureLoader, manager);
 			painting.position.set(-39.5, paintingOffsetY, start + spacing * i);
 			painting.rotation.y = Math.PI / 2;
 			painting.userData.category = 'static';
@@ -128,7 +128,7 @@ export async function createPaintings(scene, textureLoader) {
 		const start = -usable / 2 + spacing / 2;
 
 		for (let i = 0; i < rightWall.length; i++) {
-			const painting = await createPaintingMesh(rightWall[i], textureLoader);
+			const painting = await createPaintingMesh(rightWall[i], textureLoader, manager);
 			painting.position.set(39.5, paintingOffsetY, start + spacing * i);
 			painting.rotation.y = -Math.PI / 2;
 			painting.userData.category = 'static';
@@ -170,7 +170,7 @@ export async function createPaintings(scene, textureLoader) {
 	return paintings;
 }
 
-async function createPaintingMesh(item, textureLoader) {
+async function createPaintingMesh(item, textureLoader, manager) {
 	const FILE_URL = 'https://silat.bekasikab.go.id/ViewerJS/#/';
 
 	// --- Placeholder (biar objek langsung muncul) ---
@@ -228,6 +228,7 @@ async function createPaintingMesh(item, textureLoader) {
 	};
 
 	// --- Render PDF async, update setelah selesai ---
+	manager.itemStart(item.Url); // Track PDF loading
 	pdfjsLib.getDocument(item.Url).promise.then(async (pdf) => {
 		const page = await pdf.getPage(1);
 		const scale = 1.5;
@@ -261,6 +262,11 @@ async function createPaintingMesh(item, textureLoader) {
 		const newTexture = new THREE.CanvasTexture(canvas);
 		material.map = newTexture;
 		material.needsUpdate = true;
+
+		manager.itemEnd(item.Url); // End tracking
+	}).catch((error) => {
+		console.error('Error loading PDF:', error);
+		manager.itemEnd(item.Url); // End even on error
 	});
 
 	return group;

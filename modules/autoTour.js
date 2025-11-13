@@ -63,10 +63,10 @@ const sortPaintingsByWallPosition = (paintingsArray) => {
     // Combine in order: left → front → right
     const orderedPaintings = [...leftWall, ...frontWall, ...rightWall];
     
-    console.log('Paintings sorted by walls:');
-    console.log('Left wall:', leftWall.length, 'paintings');
-    console.log('Front wall:', frontWall.length, 'paintings');
-    console.log('Right wall:', rightWall.length, 'paintings');
+    // console.log('Paintings sorted by walls:');
+    // console.log('Left wall:', leftWall.length, 'paintings');
+    // console.log('Front wall:', frontWall.length, 'paintings');
+    // console.log('Right wall:', rightWall.length, 'paintings');
     
     return orderedPaintings;
 };
@@ -77,7 +77,7 @@ export const initAutoTour = (paintingsArray, cameraRef, controlsRef) => {
     camera = cameraRef;
     controls = controlsRef;
     
-    console.log('Auto tour initialized with sorted paintings:', paintings.length);
+    // console.log('Auto tour initialized with sorted paintings:', paintings.length);
 };
 
 export const startGuidedTour = () => {
@@ -126,12 +126,12 @@ const navigateToCurrentPainting = () => {
     if (currentPaintingIndex >= paintings.length) return;
     
     const painting = paintings[currentPaintingIndex];
-    console.log('Navigating to painting:', currentPaintingIndex, painting);
+    // console.log('Navigating to painting:', currentPaintingIndex, painting);
     
     const optimalPosition = calculateOptimalViewingPosition(painting);
     
     animateCameraToPosition(optimalPosition, () => {
-        console.log('Animation complete, showing painting info');
+        // console.log('Animation complete, showing painting info');
         setTimeout(() => {
             showPaintingInfo(painting);
             updateNavigationButtons();
@@ -152,25 +152,25 @@ const calculateOptimalViewingPosition = (painting) => {
     let cameraPos = new THREE.Vector3();
     
     // Debug: Log painting info
-    console.log('Painting position:', paintingPos);
-    console.log('Painting rotation:', paintingRotation);
-    console.log('Is mobile:', isMobile, 'Distance:', distance);
+    // console.log('Painting position:', paintingPos);
+    // console.log('Painting rotation:', paintingRotation);
+    // console.log('Is mobile:', isMobile, 'Distance:', distance);
     
     if (Math.abs(paintingRotation) < 0.1) {
         // Front wall (rotasi ~0)
         cameraPos.set(paintingPos.x, paintingPos.y, paintingPos.z + distance);
-        console.log('Front wall detected');
+        // console.log('Front wall detected');
     } else if (Math.abs(paintingRotation - Math.PI/2) < 0.1) {
         // Left wall (rotasi ~π/2)
         cameraPos.set(paintingPos.x + distance, paintingPos.y, paintingPos.z);
-        console.log('Left wall detected');
+        // console.log('Left wall detected');
     } else if (Math.abs(paintingRotation + Math.PI/2) < 0.1) {
         // Right wall (rotasi ~-π/2)
         cameraPos.set(paintingPos.x - distance, paintingPos.y, paintingPos.z);
-        console.log('Right wall detected');
+        // console.log('Right wall detected');
     }
     
-    console.log('Camera position calculated:', cameraPos);
+    // console.log('Camera position calculated:', cameraPos);
     
     return {
         position: cameraPos,
@@ -257,24 +257,24 @@ const updateNavigationButtons = () => {
 };
 
 const showPaintingInfo = (painting) => {
-    console.log('showPaintingInfo called for painting:', painting);
+    // console.log('showPaintingInfo called for painting:', painting);
     const info = painting.userData.info;
-    console.log('Painting info:', info);
+    // console.log('Painting info:', info);
     
     if (!info) {
-        console.log('No info found for painting');
+        // console.log('No info found for painting');
         return;
     }
     
     // Get painting-info element
     const infoElement = document.getElementById('painting-info');
-    console.log('painting-info element before displayPaintingInfo:', infoElement);
-    console.log('Element classes before:', infoElement ? infoElement.classList.toString() : 'element not found');
+    // console.log('painting-info element before displayPaintingInfo:', infoElement);
+    // console.log('Element classes before:', infoElement ? infoElement.classList.toString() : 'element not found');
     
     if (infoElement) {
         // Remove locked class if it exists
         infoElement.classList.remove('locked');
-        console.log('Removed locked class');
+        // console.log('Removed locked class');
         
         // Force show the element immediately with proper responsive centering
         infoElement.style.display = 'block';
@@ -290,23 +290,23 @@ const showPaintingInfo = (painting) => {
             infoElement.style.transform = 'translateY(0)';
         }
         
-        console.log('Applied inline styles for immediate visibility, screen width:', screenWidth);
+        // console.log('Applied inline styles for immediate visibility, screen width:', screenWidth);
     }
     
     // Use the existing displayPaintingInfo function from paintingInfo.js
     displayPaintingInfo(info);
-    console.log('Called displayPaintingInfo with info:', info);
+    // console.log('Called displayPaintingInfo with info:', info);
     
     // Force add show class after displayPaintingInfo
     if (infoElement) {
         infoElement.classList.add('show');
-        console.log('Manually added show class, final classes:', infoElement.classList.toString());
+        // console.log('Manually added show class, final classes:', infoElement.classList.toString());
         
         // Double check the computed styles
         const computedStyle = window.getComputedStyle(infoElement);
-        console.log('Final opacity:', computedStyle.opacity);
-        console.log('Final transform:', computedStyle.transform);
-        console.log('Final z-index:', computedStyle.zIndex);
+        // console.log('Final opacity:', computedStyle.opacity);
+        // console.log('Final transform:', computedStyle.transform);
+        // console.log('Final z-index:', computedStyle.zIndex);
     }
     
     // Final check after a short delay
@@ -314,11 +314,11 @@ const showPaintingInfo = (painting) => {
         const infoElementAfter = document.getElementById('painting-info');
         if (infoElementAfter) {
             const finalStyle = window.getComputedStyle(infoElementAfter);
-            console.log('=== FINAL CHECK ===');
-            console.log('Element classes:', infoElementAfter.classList.toString());
-            console.log('Final opacity:', finalStyle.opacity);
-            console.log('Final transform:', finalStyle.transform);
-            console.log('Element should be visible now!');
+            // console.log('=== FINAL CHECK ===');
+            // console.log('Element classes:', infoElementAfter.classList.toString());
+            // console.log('Final opacity:', finalStyle.opacity);
+            // console.log('Final transform:', finalStyle.transform);
+            // console.log('Element should be visible now!');
         }
     }, 100);
 };

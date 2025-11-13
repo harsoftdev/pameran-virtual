@@ -9,7 +9,7 @@ let controls;
 let renderer;
 let css3dRenderer;
 
-export const setupScene = () => {
+export const setupScene = (isLowEnd = false) => {
     // PerspectiveCamera is a type of camera that mimics the way the human eye sees things. It takes 4 parameters: field of view, aspect ratio, near clipping plane, and far clipping plane. The field of view is the extent of the scene that is seen on the display at any given moment. The aspect ratio should be the width of the element divided by the height (in this case, the screen width and height). The camera will not render objects that are closer to the camera than the near clipping plane or further away than the far clipping plane. Objects that are exactly on the clipping plane will not be rendered.
     camera = new THREE.PerspectiveCamera(
         60, // fov = field of view
@@ -26,12 +26,16 @@ export const setupScene = () => {
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 10, 7.5);
-    directionalLight.castShadow = true;
+    directionalLight.castShadow = !isLowEnd; // Disable shadows for low-end devices
     scene.add(directionalLight);
 
-    renderer = new THREE.WebGLRenderer({ antialias: false }); // create a WebGLRenderer and set its antialias property to true to enable antialiasing which smooths out the edges of what is rendered
-    renderer.setSize(window.innerWidth, window.innerHeight); // set the size of the renderer to the inner width and height of the window (the browser window)
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: !isLowEnd, // Disable antialias for low-end devices
+        powerPreference: isLowEnd ? "low-power" : "high-performance" // Use low power mode for low-end
+    }); // create a WebGLRenderer and set its antialias property to true to enable antialiasing which smooths out the edges of what is rendered
+    renderer.setSize(window.innerWidth, window.innerHeight); // set the size of the renderer to the inner width and height of the window
     renderer.setClearColor(0xffffff, 1); // set the background color of the renderer to white
+    renderer.setPixelRatio(isLowEnd ? Math.min(window.devicePixelRatio, 2) : window.devicePixelRatio); // Limit pixel ratio for low-end devices
     document.body.appendChild(renderer.domElement); // append the renderer to the body of the document (the <canvas> element that the renderer uses will be added to the body)
 
     // Create CSS3D renderer for iframe overlays

@@ -5,7 +5,13 @@ import { CSS3DObject } from "three/addons/renderers/CSS3DRenderer.js";
 // Array untuk menyimpan overlay meshes yang bisa diklik
 const clickableOverlays = [];
 
-export const createFurniture = async (scene) => {
+export const createFurniture = async (scene, isLowEnd = false) => {
+    if (isLowEnd) {
+        // Skip furniture for mobile/low-end devices to save memory
+        // console.log('Skipping furniture for low-end device');
+        return [];
+    }
+
     const loader = new GLTFLoader();
     const basePath = import.meta.env.BASE_URL;
 
@@ -46,7 +52,13 @@ export const createFurniture = async (scene) => {
     return furnitures;
 };
 
-export const createPots = async (scene) => {
+export const createPots = async (scene, isLowEnd = false) => {
+    if (isLowEnd) {
+        // Skip pots for mobile/low-end devices to save memory
+        // console.log('Skipping pots for low-end device');
+        return;
+    }
+
     const loader = new GLTFLoader();
     const basePath = import.meta.env.BASE_URL;
 
@@ -72,14 +84,14 @@ export const createPots = async (scene) => {
     });
 };
 
-export const createTvMonitor = async (scene, css3dScene, youtubeLink1 = null, youtubeLink2 = null) => {
+export const createTvMonitor = async (scene, css3dScene, youtubeLink1 = null, youtubeLink2 = null, isLowEnd = false) => {
     const loader = new GLTFLoader();
     const basePath = import.meta.env.BASE_URL;
 
     const gltf = await loader.loadAsync(`${basePath}models/tv_monitor.glb`);
     const tvMonitorOriginal = gltf.scene;
 
-    const scale = 3;
+    const scale = isLowEnd ? 2 : 3; // Smaller scale for low-end devices
     const tvMonitors = [];
 
     // Posisi di wall belakang sebelah jendela kiri dan kanan
@@ -95,8 +107,8 @@ export const createTvMonitor = async (scene, css3dScene, youtubeLink1 = null, yo
         tvMonitor.rotation.y = pos.rotationY;
         scene.add(tvMonitor);
 
-        // Jika ada URL YouTube, buat screen overlay terpisah
-        if (pos.youtubeUrl) {
+        // Skip YouTube overlay for mobile/low-end devices to save memory
+        if (!isLowEnd && pos.youtubeUrl) {
             createYouTubeScreenOverlay(scene, css3dScene, tvMonitor, pos, index);
         }
 

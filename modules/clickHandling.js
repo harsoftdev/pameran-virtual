@@ -42,7 +42,7 @@ function onClick(camera, paintings) {
 			// Buat bounding box untuk CSS3D object
 			const box = new THREE.Box3().setFromObject(css3dObject);
 			if (raycaster.ray.intersectsBox(box)) {
-				console.log('Clicked YouTube iframe overlay:', overlay.youtubeUrl);
+				// console.log('Clicked YouTube iframe overlay:', overlay.youtubeUrl);
 
 				// Fokus pada iframe untuk interaksi yang lebih baik
 				if (overlay.iframe) {
@@ -61,7 +61,7 @@ function onClick(camera, paintings) {
 	if (intersects.length > 0 && intersects[0].object.parent) {
 		const painting = intersects[0].object.parent;
 		// Perform the desired action, e.g., open a modal or redirect to another page
-		console.log('Clicked painting:', painting.userData.info.title);
+		// console.log('Clicked painting:', painting.userData.info.title);
 		window.open(painting.userData.info.link, '_blank');
 	}
 }

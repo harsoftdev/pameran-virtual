@@ -18,6 +18,18 @@ import { initAutoTour, setupAutoTourButton } from "./modules/autoTour.js";
 // === LOADING MANAGER SETUP ===
 const manager = new THREE.LoadingManager();
 
+// Detect device and performance capability
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+// Check for low-end desktop (optional optimization)
+const isLowEndDesktop = !isMobile && (
+    navigator.hardwareConcurrency <= 4 || // CPU cores
+    !window.WebGL2RenderingContext // No WebGL2 support
+);
+
+
+console.log('Device type:', isMobile ? 'Mobile' : (isLowEndDesktop ? 'Low-end Desktop' : 'Desktop'));
+
 const startTime = Date.now();
 let maxPercent = 0;
 
@@ -154,22 +166,22 @@ const trackVisitor = async () => {
 	}
 
 	// setup scene
-	({ camera, controls, renderer, css3dRenderer, css3dScene } = setupScene());
+	({ camera, controls, renderer, css3dRenderer, css3dScene } = setupScene(isMobile || isLowEndDesktop));
 
 	// setup audio
 	await setupAudio(camera);
 	// bikin objek scene
-	const walls = createWalls(scene, textureLoader);
+	const walls = createWalls(scene, textureLoader, isMobile, isLowEndDesktop);
 	const middleWalls = await createMiddleWall(scene, textureLoader);
-	setupFloor(scene);
-	const furniture = await createFurniture(scene);
-	createCeiling(scene, textureLoader);
+	setupFloor(scene, isMobile || isLowEndDesktop);
+	const furniture = await createFurniture(scene, isMobile || isLowEndDesktop);
+	createCeiling(scene, textureLoader, isMobile || isLowEndDesktop);
 	createDoor(scene, textureLoader);
-	createPots(scene);
+	createPots(scene, isMobile || isLowEndDesktop);
 	const [leftWindow, rightWindow] = createWindow(scene, textureLoader);
 	createSkyOutside(scene, [leftWindow, rightWindow], textureLoader);
 
-	const tvMonitors = await createTvMonitor(scene, css3dScene, exhibitionData?.youtube_link_1, exhibitionData?.youtube_link_2);
+	const tvMonitors = await createTvMonitor(scene, css3dScene, exhibitionData?.youtube_link_1, exhibitionData?.youtube_link_2, isMobile || isLowEndDesktop);
 	// Tambahkan ambient + hemi light untuk penerangan seluruh ruangan
 	const ambient = new THREE.AmbientLight(0xffffff, 0.3);
 	scene.add(ambient);
@@ -177,7 +189,7 @@ const trackVisitor = async () => {
 	hemiLight.position.set(0, 20, 0);
 	scene.add(hemiLight);
 
-	const paintings = await createPaintings(scene, textureLoader, manager);
+	const paintings = await createPaintings(scene, textureLoader, manager, isMobile || isLowEndDesktop);
 
 	// bounding box
 	createBoundingBoxes(walls);

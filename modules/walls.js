@@ -1,25 +1,36 @@
 import * as THREE from "three";
 
-export function createWalls(scene, textureLoader) {
+export function createWalls(scene, textureLoader, isMobile = false, isLowEndDesktop = false) {
 	let wallGroup = new THREE.Group();
 	scene.add(wallGroup);
 
-	const normalTexture = textureLoader.load(
-		"leather_white_4k.gltf/textures/leather_white_nor_gl_4k.jpg"
-	);
-	const roughnessTexture = textureLoader.load(
-		"leather_white_4k.gltf/textures/leather_white_rough_4k.jpg"
-	);
+	let wallMaterial;
 
-	normalTexture.wrapS = normalTexture.wrapT = THREE.RepeatWrapping;
-	roughnessTexture.wrapS = roughnessTexture.wrapT = THREE.RepeatWrapping;
+	if (isMobile || isLowEndDesktop) {
+		// Simple material for mobile/low-end devices
+		wallMaterial = new THREE.MeshStandardMaterial({
+			color: 0xadadae,
+			side: THREE.DoubleSide,
+		});
+	} else {
+		// Full quality for high-end desktop
+		const normalTexture = textureLoader.load(
+			"leather_white_4k.gltf/textures/leather_white_nor_gl_4k.jpg"
+		);
+		const roughnessTexture = textureLoader.load(
+			"leather_white_4k.gltf/textures/leather_white_rough_4k.jpg"
+		);
 
-	const wallMaterial = new THREE.MeshStandardMaterial({
-		color: 0xadadae,
-		normalMap: normalTexture,
-		roughnessMap: roughnessTexture,
-		side: THREE.DoubleSide,
-	});
+		normalTexture.wrapS = normalTexture.wrapT = THREE.RepeatWrapping;
+		roughnessTexture.wrapS = roughnessTexture.wrapT = THREE.RepeatWrapping;
+
+		wallMaterial = new THREE.MeshStandardMaterial({
+			color: 0xadadae,
+			normalMap: normalTexture,
+			roughnessMap: roughnessTexture,
+			side: THREE.DoubleSide,
+		});
+	}
 
 	// Front Wall
 	const frontWall = new THREE.Mesh(

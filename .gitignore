@@ -1,2 +1,6 @@
 node_modules/
 dist/
+.DS_Store
+
+# Proyek ini pakai yarn -> jangan commit lockfile npm
+package-lock.json

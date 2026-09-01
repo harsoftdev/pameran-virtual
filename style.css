@@ -158,7 +158,7 @@ canvas {
     }
 }
 
-#painting-info {
+#archive-info {
     position: fixed;
     top: 20px;
     left: 20px;
@@ -176,31 +176,31 @@ canvas {
     border: 2px solid #fff;
 }
 
-#painting-info.show {
+#archive-info.show {
     transform: translateY(0) !important;
     opacity: 1 !important;
 }
 
-#painting-info h3 {
+#archive-info h3 {
     margin: 0 0 10px 0;
     font-size: 1.3em;
     font-weight: bold;
     text-transform: uppercase;
 }
 
-#painting-info p {
+#archive-info p {
     margin: 0;
     font-size: 1.2em;
     padding: 4px 0;
 }
 
-#painting-info p .label {
+#archive-info p .label {
     width: 100px;
     display: inline-block;
     font-weight: bold;
 }
 
-#painting-info .btn-link {
+#archive-info .btn-link {
     display: inline-block;
     padding: 6px 12px;
     background-color: #0d6efd;
@@ -212,7 +212,7 @@ canvas {
     margin-top: 12px;
 }
 
-#painting-info .btn-link:hover {
+#archive-info .btn-link:hover {
     background-color: #0b5ed7;
 }
 
@@ -381,17 +381,10 @@ canvas {
     font-family: sans-serif;
 }
 
-#painting-info.locked a {
+#archive-info.locked a {
     pointer-events: none;
     cursor: default;
     opacity: 0.5;
-}
-
-#logo-wrapper {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 1000;
 }
 
 canvas {
@@ -459,6 +452,18 @@ canvas.loaded {
     min-width: 80px;
 }
 
+.nav-exit {
+    display: block;
+    margin: 0 auto;
+    padding: 8px 18px;
+    font-size: 13px;
+    background: linear-gradient(135deg, #e53935 0%, #b71c1c 100%);
+}
+
+.nav-exit:hover:not(:disabled) {
+    background: linear-gradient(135deg, #b71c1c 0%, #e53935 100%);
+}
+
 /* Responsive Design - Mobile/Tablet */
 @media screen and (max-width: 768px) {
     /* Hide "JELAJAHI ARSIP" button on mobile/tablet */
@@ -492,8 +497,8 @@ canvas.loaded {
         font-size: 16px;
     }
     
-    /* Adjust painting info for mobile */
-    #painting-info {
+    /* Adjust archive info for mobile */
+    #archive-info {
         width: 90% !important;
         max-width: 350px !important;
         left: 50% !important;
@@ -502,7 +507,7 @@ canvas.loaded {
         transform: translateX(-50%) translateY(50px) !important;
     }
     
-    #painting-info.show {
+    #archive-info.show {
         transform: translateX(-50%) translateY(0) !important;
     }
 }
@@ -545,7 +550,7 @@ canvas.loaded {
     }
     
     /* Extra small popup adjustments */
-    #painting-info {
+    #archive-info {
         width: 95% !important;
         max-width: 300px !important;
         left: 50% !important;
@@ -556,25 +561,25 @@ canvas.loaded {
         font-size: 0.9em !important;
     }
     
-    #painting-info.show {
+    #archive-info.show {
         transform: translateX(-50%) translateY(0) !important;
     }
 }
 
 /* Very small screens (320px and below) */
 @media screen and (max-width: 320px) {
-    #painting-info {
+    #archive-info {
         width: 98% !important;
         max-width: 280px !important;
         padding: 12px !important;
         font-size: 0.8em !important;
     }
     
-    #painting-info h3 {
+    #archive-info h3 {
         font-size: 1.1em !important;
     }
     
-    #painting-info p {
+    #archive-info p {
         font-size: 1em !important;
     }
     
@@ -603,7 +608,7 @@ canvas.loaded {
 
 /* Medium tablets (481px to 768px) */
 @media screen and (min-width: 481px) and (max-width: 768px) {
-    #painting-info {
+    #archive-info {
         width: 85% !important;
         max-width: 400px !important;
     }
@@ -611,13 +616,13 @@ canvas.loaded {
 
 /* Large tablets and small laptops (769px to 1024px) */
 @media screen and (min-width: 769px) and (max-width: 1024px) {
-    #painting-info {
+    #archive-info {
         width: 350px !important;
         left: 20px !important;
         transform: translateY(100px) !important;
     }
     
-    #painting-info.show {
+    #archive-info.show {
         transform: translateY(0) !important;
     }
 }

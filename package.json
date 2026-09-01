@@ -4,13 +4,14 @@
   "description": "\"Pameran Virtual - DISARPUS Kab. Bekasi\"",
   "main": "main.js",
   "dependencies": {
-    "lil-gui": "^0.20.0",
     "pdfjs-dist": "2.16.105",
     "three": "^0.171.0",
     "three-stdlib": "^2.36.0"
   },
   "devDependencies": {
+    "@gltf-transform/cli": "^4.4.2",
     "gh-pages": "^6.3.0",
+    "sharp": "^0.35.4",
     "vite": "^6.0.7"
   },
   "scripts": {
@@ -19,6 +20,7 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
+    "optimize:assets": "node scripts/optimize-assets.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "\"Harsoft\"",

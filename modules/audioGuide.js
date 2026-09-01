@@ -1,31 +1,13 @@
 import * as THREE from "three";
+import { getExhibitionData } from "./exhibitionData.js";
 
-const API_URL = 'https://silat.bekasikab.go.id/api/exhibitions';
-let exhibitionData = null;
 let sound;
 let bufferLoaded = false; // flag to track if audio buffer is loaded
 let audioPlaying = false; // flag to track if audio is currently playing
 
-// Fetch exhibition data
-const fetchExhibitionData = async () => {
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        exhibitionData = data;
-        return data;
-    } catch (error) {
-        console.warn('Could not fetch exhibition data for audio:', error);
-        exhibitionData = { data: {} }; // fallback empty data
-        return exhibitionData;
-    }
-};
-
 // setup audio for the scene
 export const setupAudio = async (camera) => {
-    // Fetch exhibition data first if not already loaded
-    if (!exhibitionData) {
-        await fetchExhibitionData();
-    }
+    const exhibitionData = await getExhibitionData();
 
     // create an audio listener and add it to the camera
     const listener = new THREE.AudioListener();
@@ -33,27 +15,22 @@ export const setupAudio = async (camera) => {
 
     sound = new THREE.Audio(listener); // creating the audio source
 
-    const audioLoader = new THREE.AudioLoader(); // create an audio loader
-    
-    // Get backsound URL from API or fallback to default
-    const backsoundUrl = exhibitionData?.data?.backsound || "sounds/Hymne_Kabupaten_Bekasi.mp3";
-    
-    audioLoader.load(backsoundUrl, function (buffer) {
-        // load the audio file
-        sound.setBuffer(buffer); // set the audio source buffer
-        sound.setLoop(true); // set the audio source to loop
-        sound.setVolume(0.8); // increased volume for better audibility
-        bufferLoaded = true; // set bufferLoaded flag to true once the audio buffer is loaded
-    });
+    const audioLoader = new THREE.AudioLoader();
+    const fallbackUrl = "sounds/Hymne_Kabupaten_Bekasi.mp3";
 
-    // // Original code (commented out) - load from static file
-    // // audioLoader.load("sounds/Hymne_Kabupaten_Bekasi.mp3", function (buffer) {
-    // //     // load the audio file
-    // //     sound.setBuffer(buffer); // set the audio source buffer
-    // //     sound.setLoop(true); // set the audio source to loop
-    // //     sound.setVolume(0.8); // increased volume for better audibility
-    // //     bufferLoaded = true; // set bufferLoaded flag to true once the audio buffer is loaded
-    // // });
+    const applyBuffer = (buffer) => {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
+        sound.setVolume(0.8);
+        bufferLoaded = true;
+    };
+
+    // Backsound dari API; kalau gagal, pakai file lokal
+    const backsoundUrl = exhibitionData?.backsound || fallbackUrl;
+    audioLoader.load(backsoundUrl, applyBuffer, undefined, () => {
+        console.warn('Backsound API gagal dimuat, pakai file lokal');
+        if (backsoundUrl !== fallbackUrl) audioLoader.load(fallbackUrl, applyBuffer);
+    });
 };
 
 // play audio

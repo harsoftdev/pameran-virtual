@@ -5,8 +5,8 @@ import { CSS3DObject } from "three/addons/renderers/CSS3DRenderer.js";
 // Array untuk menyimpan overlay meshes yang bisa diklik
 const clickableOverlays = [];
 
-export const createFurniture = async (scene) => {
-    const loader = new GLTFLoader();
+export const createFurniture = async (scene, manager) => {
+    const loader = new GLTFLoader(manager);
     const basePath = import.meta.env.BASE_URL;
 
     const gltf = await loader.loadAsync(`${basePath}models/Couch.glb`);
@@ -46,8 +46,8 @@ export const createFurniture = async (scene) => {
     return furnitures;
 };
 
-export const createPots = async (scene) => {
-    const loader = new GLTFLoader();
+export const createPots = async (scene, manager) => {
+    const loader = new GLTFLoader(manager);
     const basePath = import.meta.env.BASE_URL;
 
     // load sekali
@@ -72,8 +72,8 @@ export const createPots = async (scene) => {
     });
 };
 
-export const createTvMonitor = async (scene, css3dScene, youtubeLink1 = null, youtubeLink2 = null) => {
-    const loader = new GLTFLoader();
+export const createTvMonitor = async (scene, css3dScene, manager, youtubeLink1 = null, youtubeLink2 = null) => {
+    const loader = new GLTFLoader(manager);
     const basePath = import.meta.env.BASE_URL;
 
     const gltf = await loader.loadAsync(`${basePath}models/tv_monitor.glb`);

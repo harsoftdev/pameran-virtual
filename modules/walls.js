@@ -5,10 +5,10 @@ export function createWalls(scene, textureLoader) {
 	scene.add(wallGroup);
 
 	const normalTexture = textureLoader.load(
-		"leather_white_4k.gltf/textures/leather_white_nor_gl_4k.jpg"
+		"leather_white_4k.gltf/textures/leather_white_nor_gl_4k.webp"
 	);
 	const roughnessTexture = textureLoader.load(
-		"leather_white_4k.gltf/textures/leather_white_rough_4k.jpg"
+		"leather_white_4k.gltf/textures/leather_white_rough_4k.webp"
 	);
 
 	normalTexture.wrapS = normalTexture.wrapT = THREE.RepeatWrapping;
@@ -60,7 +60,7 @@ export function createWalls(scene, textureLoader) {
 }
 
 export const createDoor = (scene, textureLoader) => {
-	const doorTexture = textureLoader.load('images/door.png');
+	const doorTexture = textureLoader.load('images/door.webp');
 	// Adjust aspect ratio to 4:3 to make it less wide
 	const imageAspectRatio = 4 / 3;
 	const doorHeight = 13; // Reduced height to make it sit lower
@@ -85,7 +85,7 @@ export const createDoor = (scene, textureLoader) => {
 };
 
 export const createWindow = (scene, textureLoader) => {
-	const windowTexture = textureLoader.load('images/window.png');
+	const windowTexture = textureLoader.load('images/window.webp');
 	const windowGeometry = new THREE.PlaneGeometry(12, 8);
 	const windowMaterial = new THREE.MeshStandardMaterial({
 		map: windowTexture,
@@ -118,7 +118,7 @@ export const createWindow = (scene, textureLoader) => {
 };
 
 export const createSkyOutside = (scene, windowMeshes, textureLoader) => {
-	const skyTexture = textureLoader.load('images/background-window.jpg');
+	const skyTexture = textureLoader.load('images/background-window.webp');
 	return windowMeshes.map((win) => {
 		const { width, height } = win.geometry.parameters;
 		const skyGeometry = new THREE.PlaneGeometry(width, height);

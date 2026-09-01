@@ -1,268 +1,113 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader";
+import { getExhibitionData } from "./exhibitionData.js";
 
-const API_URL = 'https://silat.bekasikab.go.id/api/exhibitions';
-const res = await fetch(API_URL);
-const data = await res.json();
+const DEFAULT_IMAGE = `${import.meta.env.BASE_URL}images/no-image.webp`;
 
-// Reusable wood frame component
-export const drawWoodFrame = (ctx, canvas, frameWidth) => {
-    // Outer frame (dark brown)
-    ctx.fillStyle = '#3d2914';
-    ctx.fillRect(0, 0, canvas.width, frameWidth); // Top
-    ctx.fillRect(0, 0, frameWidth, canvas.height); // Left
-    ctx.fillRect(canvas.width - frameWidth, 0, frameWidth, canvas.height); // Right
-    ctx.fillRect(0, canvas.height - frameWidth, canvas.width, frameWidth); // Bottom
-
-    // Inner frame (medium brown)
-    ctx.fillStyle = '#8b5a2b';
-    ctx.fillRect(frameWidth - 20, frameWidth - 20, canvas.width - 2 * (frameWidth - 20), 20); // Top inner
-    ctx.fillRect(frameWidth - 20, frameWidth - 20, 20, canvas.height - 2 * (frameWidth - 20)); // Left inner
-    ctx.fillRect(canvas.width - frameWidth + 20, frameWidth - 20, 20, canvas.height - 2 * (frameWidth - 20)); // Right inner
-    ctx.fillRect(frameWidth - 20, canvas.height - frameWidth + 20, canvas.width - 2 * (frameWidth - 20), 20); // Bottom inner
-
-    // Wood grain effect (subtle lines)
-    ctx.strokeStyle = 'rgba(61, 41, 20, 0.3)';
-    ctx.lineWidth = 2;
-
-    // Horizontal grain on top and bottom frames
-    for (let y = frameWidth; y < canvas.height - frameWidth; y += 8) {
-        if (y > frameWidth + 20 && y < canvas.height - frameWidth - 20) continue; // Skip center area
-        ctx.beginPath();
-        ctx.moveTo(frameWidth, y);
-        ctx.lineTo(canvas.width - frameWidth, y);
-        ctx.stroke();
-    }
-
-    // Vertical grain on left and right frames
-    for (let x = frameWidth; x < canvas.width - frameWidth; x += 8) {
-        if (x > frameWidth + 20 && x < canvas.width - frameWidth - 20) continue; // Skip center area
-        ctx.beginPath();
-        ctx.moveTo(x, frameWidth);
-        ctx.lineTo(x, canvas.height - frameWidth);
-        ctx.stroke();
-    }
-
-    // Add some wood knots (small dark circles)
-    ctx.fillStyle = '#2d1f12';
-    const scaledKnotSize = Math.floor(8 * (canvas.width / 3584)); // Scale knot size proportionally
-    const knotPositions = [
-        [frameWidth + Math.floor(30 * (canvas.width / 3584)), frameWidth + Math.floor(40 * (canvas.width / 3584))],
-        [canvas.width - frameWidth - Math.floor(30 * (canvas.width / 3584)), frameWidth + Math.floor(60 * (canvas.width / 3584))],
-        [frameWidth + Math.floor(50 * (canvas.width / 3584)), canvas.height - frameWidth - Math.floor(30 * (canvas.width / 3584))],
-        [canvas.width - frameWidth - Math.floor(40 * (canvas.width / 3584)), canvas.height - frameWidth - Math.floor(50 * (canvas.width / 3584))]
-    ];
-    knotPositions.forEach(([x, y]) => {
-        ctx.beginPath();
-        ctx.arc(x, y, scaledKnotSize, 0, Math.PI * 2);
-        ctx.fill();
-    });
-};
-
-const loadImage = (src) => {
+// Load gambar dengan crossOrigin + timeout. Penting: tanpa timeout, koneksi API
+// yang menggantung bikin onload/onerror tidak pernah kepanggil -> proses boot
+// scene macet total.
+const loadImage = (src, timeoutMs = 8000) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        // Tambahkan crossOrigin untuk menghindari tainted canvas
         img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+        const timer = setTimeout(() => {
+            img.src = '';
+            reject(new Error(`Timeout load image: ${src}`));
+        }, timeoutMs);
+        img.onload = () => { clearTimeout(timer); resolve(img); };
+        img.onerror = () => { clearTimeout(timer); reject(new Error(`Failed to load image: ${src}`)); };
         img.src = src;
     });
 };
 
-// Reusable framed box component
-export const createFramedBox = async (parentGroup, position, boxSize, frameImagePath = null) => {
-    const { x, y, z } = position;
-    const { width, height, depth } = boxSize;
-
-    const boxMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: false
-    });
-    const box = new THREE.Mesh(
-        new THREE.BoxGeometry(width, height, depth),
-        boxMaterial
-    );
-    box.position.set(x, y, z); // Position as specified
-    parentGroup.add(box);
-
-    // Create canvas for the framed content (same size as front banner for consistency)
-    const canvas = document.createElement('canvas');
-    canvas.width = 4096;  // Same as front banner
-    canvas.height = 2048; // Same as front banner
-    const ctx = canvas.getContext('2d');
-
-    // White background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw wood frame (identical to front banner)
-    const frameWidth = 120; // Same absolute width as front banner
-    drawWoodFrame(ctx, canvas, frameWidth);
-
-    // Load and draw image if provided
-    if (frameImagePath) {
-        try {
-            const image = await loadImage(frameImagePath);
-            const imageSize = 1600; // Consistent image size across all frames
-            const imageX = (canvas.width - imageSize) / 2;
-            const imageY = (canvas.height - imageSize) / 2;
-
-            // Pastikan gambar tidak tainted dengan menggambar ulang ke canvas temporary
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = imageSize;
-            tempCanvas.height = imageSize;
-
-            // Gambar ke temporary canvas dulu
-            tempCtx.drawImage(image, 0, 0, imageSize, imageSize);
-
-            // Kemudian gambar dari temporary canvas ke canvas utama
-            ctx.drawImage(tempCanvas, imageX, imageY);
-        } catch (error) {
-            console.warn('Could not load frame image:', error);
-            // Draw fallback content when image fails to load
-            ctx.font = 'bold 128px Arial'; // Consistent with front banner scale
-            ctx.fillStyle = '#666666';
-            ctx.textAlign = 'center';
-            ctx.fillText('No Image Available', canvas.width / 2, canvas.height / 2);
-        }
-    }    
-    
-    // Create texture and apply to box
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.NearestFilter;
-    texture.magFilter = THREE.NearestFilter;
-    texture.wrapS = THREE.ClampToEdgeWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
-    const planeMaterial = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        side: THREE.DoubleSide
-    });
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), planeMaterial);
-
-    // Position plane at the front face of the box (works for all rotations)
-    plane.position.set(0, 0, depth / 2 + 0.01);
-    box.add(plane);
-
-    return box;
+// Coba src dari API, fallback ke gambar default kalau gagal/timeout
+const loadImageOrDefault = async (src) => {
+    try {
+        return await loadImage(src);
+    } catch (error) {
+        console.warn('Gambar tidak bisa dimuat, pakai default:', error.message);
+        return loadImage(DEFAULT_IMAGE).catch(() => null);
+    }
 };
 
-// Reusable plain box component (without frame and white background)
-export const createPlainBox = async (parentGroup, position, boxSize, imagePath = null) => {
+// Panel gambar di sisi dinding tengah. Box langsung dikembalikan (tidak
+// menunggu gambar); tekstur di-swap saat gambar API selesai / timeout.
+export const createPlainBox = (parentGroup, position, boxSize, imagePath = null) => {
     const { x, y, z } = position;
     const { width, height, depth } = boxSize;
 
-    const boxMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: false
-    });
     const box = new THREE.Mesh(
         new THREE.BoxGeometry(width, height, depth),
-        boxMaterial
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
     );
-    box.position.set(x, y, z); // Position as specified
+    box.position.set(x, y, z);
     parentGroup.add(box);
 
-    // Create canvas for the content
     const canvas = document.createElement('canvas');
     canvas.width = 4096;
     canvas.height = 2048;
     const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#e9e9e9'; // isian netral sebelum gambar siap
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // // White background (commented out)
-    // // ctx.fillStyle = 'white';
-    // // ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // // Draw wood frame (commented out)
-    // // const frameWidth = 120;
-    // // drawWoodFrame(ctx, canvas, frameWidth);
-
-    // Load and draw image if provided
-    if (imagePath) {
-        try {
-            const image = await loadImage(imagePath);
-            // Scale image to fit the full canvas
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-        } catch (error) {
-            console.warn('Could not load image:', error);
-            // Draw fallback content when image fails to load
-            ctx.font = 'bold 128px Arial';
-            ctx.fillStyle = '#666666';
-            ctx.textAlign = 'center';
-            ctx.fillText('No Image Available', canvas.width / 2, canvas.height / 2);
-        }
-    }
-    
-    // Create texture and apply to box
     const texture = new THREE.CanvasTexture(canvas);
     texture.generateMipmaps = false;
     texture.minFilter = THREE.NearestFilter;
     texture.magFilter = THREE.NearestFilter;
     texture.wrapS = THREE.ClampToEdgeWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
-    const planeMaterial = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        side: THREE.DoubleSide
-    });
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), planeMaterial);
 
-    // Position plane at the front face of the box (works for all rotations)
+    const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, height),
+        new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide })
+    );
     plane.position.set(0, 0, depth / 2 + 0.01);
     box.add(plane);
+
+    // Muat gambar di background lalu swap tekstur
+    if (imagePath) {
+        loadImageOrDefault(imagePath).then((image) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (image) {
+                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#e9e9e9';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = 'bold 128px Arial';
+                ctx.fillStyle = '#666666';
+                ctx.textAlign = 'center';
+                ctx.fillText('No Image Available', canvas.width / 2, canvas.height / 2);
+            }
+            texture.needsUpdate = true;
+        });
+    }
 
     return box;
 };
 
 export const createMiddleWall = async (scene, textureLoader) => {
+    const exhData = await getExhibitionData();
     const wallGroup = new THREE.Group();
     scene.add(wallGroup);
 
-    // Function to load image with fallback
-    async function getFrameImage(framePath) {
-        const basePath = import.meta.env.BASE_URL;
-        const defaultImage = `${basePath}images/no-image.png`;
+    // Resolve URL gambar dari API (absolute atau relatif ke BASE_URL).
+    // Load + fallback ditangani createPlainBox (loadImageOrDefault, ada timeout).
+    const resolveImg = (p) => {
+        if (!p) return DEFAULT_IMAGE;
+        return p.startsWith('http') ? p : `${import.meta.env.BASE_URL}${p}`;
+    };
 
-        // Kalau API gak kasih apa-apa, langsung fallback
-        if (!framePath) return defaultImage;
+    const frameImagePath1 = resolveImg(exhData?.quotes_image_1);
+    const frameImagePath2 = resolveImg(exhData?.quotes_image_2);
+    const frameImagePath3 = resolveImg(exhData?.bupati_image);
 
-        // Jika path dari API, bisa absolute (http...) atau relative
-        const imageUrl = framePath.startsWith('http')
-            ? framePath
-            : `${basePath}${framePath}`;
-
-        try {
-            // Coba load gambar dengan crossOrigin
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = () => {
-                    reject(new Error('CORS blocked'));
-                };
-                img.src = imageUrl;
-            });
-
-            return imageUrl;
-        } catch (error) {
-            console.warn(`⚠️ Gagal load gambar dari API (CORS issue), pakai default:`, error.message);
-            return defaultImage;
-        }
-    }
-
-    const frameImagePath1 = await getFrameImage(data.data.quotes_image_1);
-    const frameImagePath2 = await getFrameImage(data.data.quotes_image_2);
-    const frameImagePath3 = await getFrameImage(data.data.bupati_image);
-
+    // Samakan dengan dinding luar (walls.js): nor_gl -> normalMap, rough -> roughnessMap
     const normalTexture = textureLoader.load(
-        "leather_white_4k.gltf/textures/leather_white_diff_4k.jpg"
+        "leather_white_4k.gltf/textures/leather_white_nor_gl_4k.webp"
     );
     const roughnessTexture = textureLoader.load(
-        "leather_white_4k.gltf/textures/leather_white_nor_gl_4k.jpg"
+        "leather_white_4k.gltf/textures/leather_white_rough_4k.webp"
     );
     normalTexture.wrapS = normalTexture.wrapT = THREE.RepeatWrapping;
     roughnessTexture.wrapS = roughnessTexture.wrapT = THREE.RepeatWrapping;
@@ -286,7 +131,7 @@ export const createMiddleWall = async (scene, textureLoader) => {
 
     wallGroup.add(middleWall);
 
-    const loader = new GLTFLoader();
+    const loader = new GLTFLoader(textureLoader.manager);
     const basePath = import.meta.env.BASE_URL;
     const vaseGLBPath = `${basePath}models/pot_plant_dracena.glb`;
 
@@ -309,37 +154,38 @@ export const createMiddleWall = async (scene, textureLoader) => {
     const sideBoxWidth = 10; // Same width as front banner height
     const sideBoxHeight = 8; // Same height as front banner
 
-    // Left wall box - rotated to face left (-X direction)
-    const leftWallBox = await createPlainBox(
+    // Panel kiri (menghadap -X)
+    const leftWallBox = createPlainBox(
         wallGroup,
-        { x: -wallWidth / 2 - 0.1, y: wallHeight / 2 - 3, z: 0 }, // Much closer to wall and raised position
-        { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
+        { x: -wallWidth / 2 - 0.1, y: wallHeight / 2 - 3, z: 0 },
+        { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 },
         frameImagePath1
     );
-    leftWallBox.rotation.y = -Math.PI / 2; // Rotate -90 degrees to face left
+    leftWallBox.rotation.y = -Math.PI / 2;
 
-    // Right wall box - rotated to face right (+X direction)
-    const rightWallBox = await createPlainBox(
+    // Panel kanan (menghadap +X)
+    const rightWallBox = createPlainBox(
         wallGroup,
-        { x: wallWidth / 2 + 0.1, y: wallHeight / 2 - 3, z: 0 }, // Much closer to wall and raised position
-        { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
+        { x: wallWidth / 2 + 0.1, y: wallHeight / 2 - 3, z: 0 },
+        { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 },
         frameImagePath2
     );
-    rightWallBox.rotation.y = Math.PI / 2; // Rotate +90 degrees to face right
+    rightWallBox.rotation.y = Math.PI / 2;
 
-    // Back wall box - rotated to face back (-Z direction)
-    const backWallBox = await createPlainBox(
+    // Panel belakang (menghadap -Z)
+    const backWallBox = createPlainBox(
         wallGroup,
-        { x: 0, y: wallHeight / 2 - 3, z: -wallDepth / 2 - 0.1 }, // Position at the back of the middle wall
-        { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 }, // Match front banner dimensions
+        { x: 0, y: wallHeight / 2 - 3, z: -wallDepth / 2 - 0.1 },
+        { width: sideBoxWidth, height: sideBoxHeight, depth: 0.2 },
         frameImagePath3
     );
-    backWallBox.rotation.y = Math.PI; // Rotate 180 degrees to face back
+    backWallBox.rotation.y = Math.PI;
 
     return wallGroup;
 };
 
 export const createTitleBox = async (scene) => {
+    const exhData = await getExhibitionData();
     const boxWidth = 14;
     const boxHeight = 8;
     const boxDepth = 0.3;
@@ -365,131 +211,30 @@ export const createTitleBox = async (scene) => {
     canvas.height = 2048; // Power of 2 dimensions for optimal texture rendering
     const ctx = canvas.getContext('2d');
 
-    // // Use reusable wood frame component (original size)
-    // const frameWidth = 120; // Original frame width
-    // drawWoodFrame(ctx, canvas, frameWidth);
-
-    // // ctx.font = 'bold 224px Arial'; // Scaled up for new canvas size
-    // // ctx.fillStyle = 'black';
-    // // ctx.textAlign = 'center';
-    // // ctx.textBaseline = 'middle';
-
-    // // Auto-wrap text to fit within white content area
-    // // const text = data.data.title || 'Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi';
-    // // const maxWidth = canvas.width - (frameWidth * 2) - 60; // Available width minus frame and smaller margins
-    // // const lineHeight = 292; // Scaled up proportionally
-
-    // // Function to wrap text
-    // // function wrapText(context, text, maxWidth, fontSize) {
-    // //     const words = text.split(' ');
-    // //     const lines = [];
-    // //     const currentLine = '';
-
-    // //     // Temporarily set font to measure text
-    // //     const originalFont = context.font;
-    // //     context.font = `bold ${fontSize}px Arial`;
-
-    // //     words.forEach(word => {
-    // //         const testLine = currentLine + (currentLine ? ' ' : '') + word;
-    // //         const metrics = context.measureText(testLine);
-
-    // //         if (metrics.width > maxWidth && currentLine) {
-    // //             lines.push(currentLine);
-    // //             currentLine = word;
-    // //         } else {
-    // //             currentLine = testLine;
-    // //         }
-    // //     });
-
-    // //     if (currentLine) {
-    // //         lines.push(currentLine);
-    // //     }
-
-    // //     // Restore original font
-    // //     context.font = originalFont;
-    // //     return lines;
-    // // }
-
-    // // Get wrapped lines
-    // // const lines = wrapText(ctx, text, maxWidth, 224);
-    // // const totalTextHeight = lines.length * lineHeight;
-    // // const startY = canvas.height / 2 - totalTextHeight / 2; // Center vertically
-
-    // // Draw each line
-    // // lines.forEach((line, index) => {
-    // //     ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
-    // // });
-
-    // Load and draw title image from API
-    const titleImageUrl = data.data.title_image;
-    if (titleImageUrl) {
-        try {
-            const image = await loadImage(titleImageUrl);
-            // Scale image to fit the full canvas
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-        } catch (error) {
-            console.warn('Could not load title image:', error);
-            // Fallback: draw default text if image fails
-            ctx.font = 'bold 224px Arial';
-            ctx.fillStyle = 'black';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi', canvas.width / 2, canvas.height / 2);
-        }
-    } else {
-        // Fallback if no title_image
+    const drawTitleText = (text) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = 'bold 224px Arial';
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(data.data.title || 'Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi', canvas.width / 2, canvas.height / 2);
-    }
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    };
 
-    // // Load and draw logos at the bottom
-    // // const basePath = import.meta.env.BASE_URL;
-
-    // // Create promises for image loading
-    // // const loadImage = (src) => {
-    // //     return new Promise((resolve) => {
-    // //         const img = new Image();
-    // //         img.onload = () => resolve(img);
-    // //         img.onerror = () => {
-    // //             console.warn(`Failed to load image: ${src}`);
-    // //             resolve(null); // Return null instead of rejecting
-    // //         };
-    // //         img.src = src;
-    // //     });
-    // // };
-
-    // // Load both logos and draw them
-    // // try {
-    // //     const logo1 = await loadImage(`${basePath}images/logo/bekasi.png`);
-    // //     const logo2 = await loadImage(`${basePath}images/logo/disarpus.png`);
-
-    // //     // Draw logos at the bottom with higher resolution, positioned for rectangular format and frame
-    // //     const bekasiLogoSize = 400; // Smaller size as requested
-    // //     const disarpusLogoWidth = 600; // Wider Disarpus logo
-    // //     const disarpusLogoHeight = 480; // Slightly shorter height for wider appearance
-
-    // //     // Only draw logos if they loaded successfully
-    // //     if (logo1) {
-    // //         // Position Bekasi logo (left side) - smaller size as requested
-    // //         const bekasiX = frameWidth + 40; // Adjusted position for smaller frame
-    // //         const bekasiY = canvas.height - frameWidth - bekasiLogoSize - 40;
-    // //         ctx.drawImage(logo1, bekasiX, bekasiY, bekasiLogoSize, bekasiLogoSize);
-    // //     }
-
-    // //     if (logo2) {
-    // //         // Position Disarpus logo (right side) - wider format as requested
-    // //         const disarpusX = canvas.width - frameWidth - disarpusLogoWidth - 40;
-    // //         const disarpusY = canvas.height - frameWidth - disarpusLogoHeight - 40;
-    // //         ctx.drawImage(logo2, disarpusX, disarpusY, disarpusLogoWidth, disarpusLogoHeight);
-    // //     }
-    // // } catch (error) {
-    // //     console.warn('Could not load logos:', error);
-    // // }
+    // Tampilkan teks judul dulu; kalau ada title_image dari API, swap saat siap.
+    drawTitleText(exhData?.title || 'Pameran Virtual Arsip dan Perpustakaan Kabupaten Bekasi');
 
     const texture = new THREE.CanvasTexture(canvas);
+
+    const titleImageUrl = exhData?.title_image;
+    if (titleImageUrl) {
+        loadImage(titleImageUrl)
+            .then((image) => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                texture.needsUpdate = true;
+            })
+            .catch((err) => console.warn('Title image gagal dimuat:', err.message));
+    }
 
     // Set texture filtering for maximum sharpness
     texture.generateMipmaps = false;
@@ -510,4 +255,3 @@ export const createTitleBox = async (scene) => {
 
     return titleBox;
 };
-

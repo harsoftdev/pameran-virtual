@@ -1,51 +1,66 @@
 import * as THREE from "three";
-import { displayPaintingInfo, hidePaintingInfo } from "./paintingInfo.js";
+import { displayArchiveInfo, hideArchiveInfo } from "./archiveInfo.js";
+import { updateArchiveSpotlights } from "./archives.js";
+import { isAutoTourRunning } from "./autoTour.js";
 import { updateMovement } from "./movement.js";
 import { updateOverlayVisibility, clickableOverlays } from "./furniture.js";
+
+const ARCHIVE_VIEW_DISTANCE = 8;
+const OVERLAY_CHECK_EVERY = 6; // frame
+const SPOTLIGHT_UPDATE_EVERY = 8; // frame
 
 export const setupRendering = (
 	scene,
 	camera,
 	renderer,
-	paintings,
+	archives,
 	controls,
 	walls,
 	css3dRenderer,
 	css3dScene
 ) => {
 	const clock = new THREE.Clock();
+	let frame = 0;
+	let shownArchive = null; // arsip yang panel infonya sedang tampil
 
-	let render = function () {
+	const render = () => {
 		const delta = clock.getDelta();
+		frame++;
 
-		updateMovement(delta, controls, camera, walls);
+		const touring = isAutoTourRunning();
 
-		const distanceThreshold = 8;
+		// Saat tur otomatis, kamera dikendalikan autoTour -> jangan diganggu
+		if (!touring) {
+			updateMovement(delta, controls, camera, walls);
 
-		let paintingToShow;
-		paintings.forEach((painting) => {
-			const distanceToPainting = camera.position.distanceTo(painting.position);
-			if (distanceToPainting < distanceThreshold) {
-				paintingToShow = painting;
+			// Cari arsip terdekat dalam radius; update DOM hanya saat berganti
+			let nearest = null;
+			for (const archive of archives) {
+				if (camera.position.distanceTo(archive.position) < ARCHIVE_VIEW_DISTANCE) {
+					nearest = archive;
+				}
 			}
-		});
-
-		if (paintingToShow) {
-			// if there is a painting to show
-			displayPaintingInfo(paintingToShow.userData.info);
+			if (nearest !== shownArchive) {
+				shownArchive = nearest;
+				if (nearest) displayArchiveInfo(nearest.userData.info);
+				else hideArchiveInfo();
+			}
 		} else {
-			hidePaintingInfo();
+			shownArchive = null;
 		}
 
-		renderer.gammaOutput = true;
-		renderer.gammaFactor = 2.2;
+		// Sorotan lampu galeri mengikuti arsip terdekat
+		if (frame % SPOTLIGHT_UPDATE_EVERY === 0) {
+			updateArchiveSpotlights(camera);
+		}
 
 		renderer.render(scene, camera);
 
-		// Update overlay visibility based on camera position and occlusion
-		updateOverlayVisibility(camera, clickableOverlays, scene);
+		// Occlusion check overlay iframe: mahal (raycast) -> jangan tiap frame
+		if (clickableOverlays.length && frame % OVERLAY_CHECK_EVERY === 0) {
+			updateOverlayVisibility(camera, clickableOverlays, scene);
+		}
 
-		// Render CSS3D scene for iframe overlays
 		if (css3dRenderer && css3dScene) {
 			css3dRenderer.render(css3dScene, camera);
 		}

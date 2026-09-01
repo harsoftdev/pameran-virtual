@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { scene, setupScene } from "./modules/scene.js";
-import { createPaintings } from "./modules/paintings.js";
+import { createArchives } from "./modules/archives.js";
 import { createDoor, createSkyOutside, createWalls, createWindow } from "./modules/walls.js";
 import { setupFloor } from "./modules/floor.js";
 import { createCeiling } from "./modules/ceiling.js";
@@ -14,49 +14,51 @@ import { createFurniture, createPots, createTvMonitor } from "./modules/furnitur
 import { createMiddleWall, createTitleBox } from "./modules/middleWall.js";
 import { setupAudio, startAudio } from "./modules/audioGuide.js";
 import { initAutoTour, setupAutoTourButton } from "./modules/autoTour.js";
+import { getExhibitionData } from "./modules/exhibitionData.js";
 
-// === LOADING MANAGER SETUP ===
+// === LOADING MANAGER ===
+// Manager ini hanya melacak aset SCENE (tekstur ruangan + model). PDF arsip
+// TIDAK dilacak di sini -- jumlahnya banyak & lambat, jadi di-stream terpisah
+// dengan placeholder (lihat modules/archives.js). Loader tampil sampai scene
+// benar-benar siap, bukan sampai semua PDF selesai.
 const manager = new THREE.LoadingManager();
-
 const startTime = Date.now();
-let maxPercent = 0;
+let revealed = false;
 
-// Update progress bar setiap kali ada asset di-load
-manager.onProgress = function (url, itemsLoaded, itemsTotal) {
-	const percent = (itemsLoaded / itemsTotal) * 100;
-	maxPercent = Math.max(maxPercent, percent);
-	document.getElementById("progress-bar").style.width = maxPercent + "%";
-	document.getElementById("progress-text").textContent =
-		// `Memuat Pameran Virtual... ${Math.round(maxPercent)}%`;
-		`Memuat Pameran Virtual...`;
+const setProgress = (pct) => {
+	pct = Math.round(pct);
+	document.getElementById("progress-bar").style.width = pct + "%";
+	document.getElementById("progress-text").textContent = `Memuat Pameran Virtual... ${pct}%`;
 };
 
-// Ketika semua asset selesai di-load
-manager.onLoad = function () {
+manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+	setProgress((itemsLoaded / itemsTotal) * 100);
+};
+
+manager.onLoad = () => revealScene();
+
+async function revealScene() {
+	if (revealed) return; // cukup sekali
+	revealed = true;
+	setProgress(100);
+
+	// tahan minimal 1.5 detik biar transisi loader tidak berkedip
 	const elapsed = Date.now() - startTime;
-	const minDuration = 1500; // minimal 1.5 detik tampil biar smooth
+	await new Promise((r) => setTimeout(r, Math.max(0, 1500 - elapsed)));
 
-	const wait = Math.max(0, minDuration - elapsed);
+	// pastikan shader ter-compile sebelum loader hilang
+	if (renderer?.compileAsync) {
+		await renderer.compileAsync(scene, camera);
+	} else {
+		renderer.render(scene, camera);
+	}
 
-	setTimeout(async () => {
-		// pastikan shader sudah compile sebelum loader hilang
-		if (renderer.compileAsync) {
-			await renderer.compileAsync(scene, camera);
-		} else {
-			renderer.render(scene, camera); // fallback render sekali
-		}
+	document.querySelector("canvas").classList.add("loaded"); // fade-in canvas
 
-		// fade-in canvas
-		document.querySelector("canvas").classList.add("loaded");
-
-		// hilangkan loader
-		const loaderDiv = document.getElementById("loader");
-		loaderDiv.style.opacity = 0;
-		setTimeout(() => {
-			loaderDiv.style.display = "none";
-		}, 500);
-	}, wait);
-};
+	const loaderDiv = document.getElementById("loader");
+	loaderDiv.style.opacity = 0;
+	setTimeout(() => { loaderDiv.style.display = "none"; }, 500);
+}
 
 // Gunakan manager di TextureLoader
 const textureLoader = new THREE.TextureLoader(manager);
@@ -111,16 +113,8 @@ const trackVisitor = async () => {
 };
 
 (async () => {
-	// Ambil data exhibition untuk validasi dan YouTube links
-	let exhibitionData = null;
-	try {
-		const response = await fetch('https://silat.bekasikab.go.id/api/exhibitions');
-		const data = await response.json();
-		exhibitionData = data.data;
-	} catch (error) {
-		console.warn('Could not fetch exhibition data:', error);
-		// Jika gagal fetch, lanjutkan tanpa validasi
-	}
+	// Ambil data exhibition (cached, dipakai bareng audioGuide & middleWall)
+	const exhibitionData = await getExhibitionData();
 
 	// Validasi berdasarkan is_periodic
 	if (exhibitionData && exhibitionData.is_periodic) {
@@ -153,6 +147,10 @@ const trackVisitor = async () => {
 		await trackVisitor();
 	}
 
+	// Sentinel: jaga manager tetap "loading" selama scene dibangun, supaya
+	// onLoad tidak kepicu prematur di sela-sela await (fetch API, load model).
+	manager.itemStart("__boot__");
+
 	// setup scene
 	({ camera, controls, renderer, css3dRenderer, css3dScene } = setupScene());
 
@@ -161,28 +159,23 @@ const trackVisitor = async () => {
 	// bikin objek scene
 	const walls = createWalls(scene, textureLoader);
 	const middleWalls = await createMiddleWall(scene, textureLoader);
-	setupFloor(scene);
-	const furniture = await createFurniture(scene);
+	setupFloor(scene, manager);
+	const furniture = await createFurniture(scene, manager);
 	createCeiling(scene, textureLoader);
 	createDoor(scene, textureLoader);
-	createPots(scene);
+	createPots(scene, manager);
 	const [leftWindow, rightWindow] = createWindow(scene, textureLoader);
 	createSkyOutside(scene, [leftWindow, rightWindow], textureLoader);
 
-	const tvMonitors = await createTvMonitor(scene, css3dScene, exhibitionData?.youtube_link_1, exhibitionData?.youtube_link_2);
-	// Tambahkan ambient + hemi light untuk penerangan seluruh ruangan
-	const ambient = new THREE.AmbientLight(0xffffff, 0.3);
-	scene.add(ambient);
-	const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5);
-	hemiLight.position.set(0, 20, 0);
-	scene.add(hemiLight);
+	const tvMonitors = await createTvMonitor(scene, css3dScene, manager, exhibitionData?.youtube_link_1, exhibitionData?.youtube_link_2);
 
-	const paintings = await createPaintings(scene, textureLoader, manager);
+	// PDF arsip di-stream terpisah (tidak lewat loading manager)
+	const archives = await createArchives(scene, textureLoader);
 
 	// bounding box
 	createBoundingBoxes(walls);
 	createBoundingBoxes(middleWalls);
-	createBoundingBoxes(paintings);
+	createBoundingBoxes(archives);
 	createBoundingBoxes(tvMonitors);
 
 	const allWalls = [...walls.children, ...middleWalls.children, ...furniture, ...tvMonitors];
@@ -190,15 +183,19 @@ const trackVisitor = async () => {
 	await createTitleBox(scene);
 
 	// add ke scene
-	addObjectsToScene(scene, paintings);
+	addObjectsToScene(scene, archives);
 
 	// setup controls & event
 	setupPlayButton(controls);
-	setupAutoTourButton(controls);
-	initAutoTour(paintings, camera, controls);
-	setupEventListeners(controls, camera, scene, renderer);
-	clickHandling(renderer, camera, paintings);
-	setupRendering(scene, camera, renderer, paintings, controls, allWalls, css3dRenderer, css3dScene);
+	setupAutoTourButton();
+	initAutoTour(archives, camera);
+	setupEventListeners(controls);
+	clickHandling(renderer, camera, archives);
+	setupRendering(scene, camera, renderer, archives, controls, allWalls, css3dRenderer, css3dScene);
+
+	// Scene selesai dibangun -> lepas sentinel. onLoad jalan begitu semua
+	// tekstur & model yang dilacak manager juga selesai.
+	manager.itemEnd("__boot__");
 
 	// Add one-time user interaction handler for audio autoplay
 	let audioStarted = false;
@@ -216,7 +213,7 @@ const trackVisitor = async () => {
 	document.addEventListener("keydown", startAudioOnInteraction);
 
 	document.addEventListener("pointerlockchange", () => {
-		const infoElement = document.getElementById("painting-info");
+		const infoElement = document.getElementById("archive-info");
 		const isLocked = !!document.pointerLockElement;
 
 		if (isLocked) {
